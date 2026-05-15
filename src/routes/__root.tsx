@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Comparador de NF" },
+      { name: "description", content: "Comparador de lançamentos fiscais entre Jettax, Portal Nacional e Dominio." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Comparador de NF" },
+      { property: "og:description", content: "Comparador de lançamentos fiscais entre Jettax, Portal Nacional e Dominio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Comparador de NF" },
+      { name: "twitter:description", content: "Comparador de lançamentos fiscais entre Jettax, Portal Nacional e Dominio." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f556f93a-c8a3-42d7-bb36-e446d05e3083/id-preview-0581a37b--bca12131-bc9d-4f95-944a-e5899b34e53a.lovable.app-1778865788525.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f556f93a-c8a3-42d7-bb36-e446d05e3083/id-preview-0581a37b--bca12131-bc9d-4f95-944a-e5899b34e53a.lovable.app-1778865788525.png" },
     ],
     links: [
       {
