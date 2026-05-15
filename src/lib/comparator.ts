@@ -89,10 +89,28 @@ export async function parseExcel(
 
 export type DominioRecord = ParsedRecord;
 
-export async function parseDominioPdf(file: File): Promise<DominioRecord[]> {
+const ESPECIE_FILTER: Record<string, string[]> = {
+  "entrada-NFE": ["36"],
+  "entrada-CTE": ["38"],
+  "entrada-NFSe": ["39", "67"],
+  "saida-NFE": ["36"],
+  "saida-NFCe": ["65"],
+  "saida-NFSe": ["39"],
+};
+
+export function getEspecieCodes(mov: Movement, doc: DocType): string[] {
+  return ESPECIE_FILTER[`${mov}-${doc}`] ?? [];
+}
+
+export async function parseDominioPdf(
+  file: File,
+  mov: Movement,
+  doc: DocType,
+): Promise<DominioRecord[]> {
   const buf = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
 
+  const allowedEspecies = new Set(getEspecieCodes(mov, doc));
   const records: DominioRecord[] = [];
 
   for (let p = 1; p <= pdf.numPages; p++) {
