@@ -197,8 +197,10 @@ export async function parseDominioPdf(
             });
 
             if (!notaItem) continue;
-            const notaStr = normalizeNota(notaItem.str);
+            let notaStr = normalizeNota(notaItem.str);
             if (!notaStr) continue;
+            // Remove o último dígito (pertence à coluna Série, não Nota)
+            if (notaStr.length > 1) notaStr = notaStr.slice(0, -1);
 
             // Filter by Espécie when column is found
             if (especieX !== null && allowedEspecies.size > 0) {
