@@ -51,7 +51,7 @@ function parseNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
-export type ParsedRecord = { nota: string; valor: number };
+export type ParsedRecord = { nota: string; valor: number; fornecedor?: string };
 
 export async function parseExcel(
   file: File,
@@ -65,6 +65,7 @@ export async function parseExcel(
   const records: ParsedRecord[] = [];
   const notaIdx = colLetterToIndex(cols.nota);
   const valorIdx = colLetterToIndex(cols.valor);
+  const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
 
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
@@ -79,9 +80,10 @@ export async function parseExcel(
       const valorRaw = row[valorIdx];
       const nota = normalizeNota(notaRaw);
       if (!nota || nota.length < 1) continue;
-      // skip if header-like (non-numeric in nota cell already filtered by normalize)
       const valor = parseNumber(valorRaw);
-      records.push({ nota, valor });
+      const fornecedor =
+        fornIdx >= 0 && row[fornIdx] != null ? String(row[fornIdx]).trim() : undefined;
+      records.push({ nota, valor, fornecedor });
     }
   }
   return records;
