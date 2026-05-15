@@ -287,7 +287,7 @@ function CompareStep({
       const [jRecs, pRecs, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve([]),
         portal ? parseExcel(portal, movement, docType) : Promise.resolve([]),
-        parseDominioPdf(dominio),
+        parseDominioPdf(dominio, movement, docType),
       ]);
       setResult(compare(jRecs, pRecs, dRecs));
     } catch (e: any) {
