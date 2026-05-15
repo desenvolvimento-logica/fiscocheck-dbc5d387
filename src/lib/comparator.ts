@@ -149,6 +149,8 @@ export async function parseDominioPdf(
     let nextValorX: number | null = null;
     let especieX: number | null = null;
     let especieNextX: number | null = null;
+    let fornecedorX: number | null = null;
+    let fornecedorNextX: number | null = null;
 
     for (const row of sortedRows) {
       const joined = row.map((r) => r.str).join(" ").toLowerCase();
@@ -163,6 +165,10 @@ export async function parseDominioPdf(
           if (s.includes("espécie") || s.includes("especie")) {
             especieX = row[i].x;
             if (i + 1 < row.length) especieNextX = row[i + 1].x;
+          }
+          if (s.includes("fornecedor") || s.includes("participante")) {
+            fornecedorX = row[i].x;
+            if (i + 1 < row.length) fornecedorNextX = row[i + 1].x;
           }
         }
         if (notaX !== null && valorX !== null) {
@@ -203,9 +209,25 @@ export async function parseDominioPdf(
               if (!allowedEspecies.has(especieStr)) continue;
             }
 
+            let fornecedor: string | undefined;
+            if (fornecedorX !== null) {
+              const fornItems = dataRow.filter((it) => {
+                if (fornecedorNextX !== null) {
+                  return it.x >= fornecedorX! - 10 && it.x < fornecedorNextX - 5;
+                }
+                return it.x >= fornecedorX! - 10 && it.x < fornecedorX! + 200;
+              });
+              fornecedor = fornItems
+                .map((v) => v.str)
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (!fornecedor) fornecedor = undefined;
+            }
+
             const valorStr = valorItems.map((v) => v.str).join("");
             const valor = parseNumber(valorStr);
-            records.push({ nota: notaStr, valor });
+            records.push({ nota: notaStr, valor, fornecedor });
           }
           break;
         }
