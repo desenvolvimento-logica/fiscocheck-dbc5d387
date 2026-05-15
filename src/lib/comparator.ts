@@ -238,6 +238,8 @@ export async function parseDominioPdf(
   return records;
 }
 
+export type MissingRecord = { nota: string; fornecedor?: string; valor: number };
+
 export type CompareResult = {
   jettax: { count: number; total: number };
   portal: { count: number; total: number };
@@ -245,6 +247,8 @@ export type CompareResult = {
   dominio: { count: number; total: number };
   diffCount: number;
   diffTotal: number;
+  missingInDominio: MissingRecord[]; // no cliente, ausentes no Domínio
+  missingInClient: MissingRecord[]; // no Domínio, ausentes no cliente
 };
 
 export function compare(
@@ -253,7 +257,6 @@ export function compare(
   dominio: DominioRecord[],
 ): CompareResult {
   const sumValid = (arr: ParsedRecord[]) => {
-    // dedupe internally too (by nota)
     const map = new Map<string, number>();
     for (const r of arr) {
       if (!map.has(r.nota)) map.set(r.nota, r.valor);
@@ -266,28 +269,43 @@ export function compare(
   const jStat = sumValid(jettax);
   const pStat = sumValid(portal);
 
-  // Combine deduplicating across both files
-  const combined = new Map<string, number>();
+  // Combine deduplicating across both files (preservar fornecedor)
+  const combined = new Map<string, MissingRecord>();
   let duplicates = 0;
   for (const r of jettax) {
-    if (!combined.has(r.nota)) combined.set(r.nota, r.valor);
+    if (!combined.has(r.nota))
+      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
   }
   for (const r of portal) {
     if (combined.has(r.nota)) {
       duplicates++;
     } else {
-      combined.set(r.nota, r.valor);
+      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
     }
   }
   let combinedTotal = 0;
-  combined.forEach((v) => (combinedTotal += v));
+  combined.forEach((v) => (combinedTotal += v.valor));
 
-  const dMap = new Map<string, number>();
+  const dMap = new Map<string, MissingRecord>();
   for (const r of dominio) {
-    if (!dMap.has(r.nota)) dMap.set(r.nota, r.valor);
+    if (!dMap.has(r.nota))
+      dMap.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
   }
   let dTotal = 0;
   for (const r of dominio) dTotal += r.valor;
+
+  const missingInDominio: MissingRecord[] = [];
+  combined.forEach((rec, nota) => {
+    if (!dMap.has(nota)) missingInDominio.push(rec);
+  });
+  const missingInClient: MissingRecord[] = [];
+  dMap.forEach((rec, nota) => {
+    if (!combined.has(nota)) missingInClient.push(rec);
+  });
+
+  const byNota = (a: MissingRecord, b: MissingRecord) => a.nota.localeCompare(b.nota);
+  missingInDominio.sort(byNota);
+  missingInClient.sort(byNota);
 
   return {
     jettax: jStat,
@@ -300,6 +318,8 @@ export function compare(
     dominio: { count: dMap.size, total: dTotal },
     diffCount: combined.size - dMap.size,
     diffTotal: combinedTotal - dTotal,
+    missingInDominio,
+    missingInClient,
   };
 }
 
