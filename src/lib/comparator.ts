@@ -170,7 +170,7 @@ export async function parseDominioPdf(
             especieX = row[i].x;
             if (i + 1 < row.length) especieNextX = row[i + 1].x;
           }
-          if (s.includes("fornecedor") || s.includes("participante")) {
+          if (s.includes("fornecedor") || s.includes("participante") || s === "cliente" || s.startsWith("cliente")) {
             fornecedorX = row[i].x;
             if (i + 1 < row.length) fornecedorNextX = row[i + 1].x;
           }
