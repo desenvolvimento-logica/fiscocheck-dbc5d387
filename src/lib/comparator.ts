@@ -1,0 +1,248 @@
+import * as XLSX from "xlsx";
+import * as pdfjs from "pdfjs-dist";
+// @ts-ignore
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+
+export type Movement = "entrada" | "saida";
+export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
+
+// Column letters per spec for Jettax (and assumed same for Portal Nacional)
+const COLS: Record<string, { nota: string; valor: string }> = {
+  "entrada-NFE": { nota: "D", valor: "T" },
+  "entrada-CTE": { nota: "C", valor: "BI" },
+  "entrada-NFSe": { nota: "A", valor: "L" },
+  "saida-NFE": { nota: "D", valor: "T" },
+  "saida-NFCe": { nota: "D", valor: "T" },
+  "saida-NFSe": { nota: "A", valor: "L" },
+};
+
+export function getColumns(mov: Movement, doc: DocType) {
+  return COLS[`${mov}-${doc}`];
+}
+
+function colLetterToIndex(letter: string): number {
+  let n = 0;
+  for (const c of letter.toUpperCase()) n = n * 26 + (c.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+function normalizeNota(v: any): string {
+  if (v === null || v === undefined) return "";
+  let s = String(v).trim();
+  // remove non-alphanumeric to handle formatting differences
+  s = s.replace(/\D+/g, "");
+  // strip leading zeros
+  s = s.replace(/^0+/, "");
+  return s;
+}
+
+function parseNumber(v: any): number {
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number") return v;
+  let s = String(v).trim();
+  s = s.replace(/[R$\s]/g, "");
+  // Brazilian: 1.234,56 -> 1234.56
+  if (s.includes(",")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+export type ParsedRecord = { nota: string; valor: number };
+
+export async function parseExcel(
+  file: File,
+  mov: Movement,
+  doc: DocType,
+): Promise<ParsedRecord[]> {
+  const cols = getColumns(mov, doc);
+  if (!cols) return [];
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const records: ParsedRecord[] = [];
+  const notaIdx = colLetterToIndex(cols.nota);
+  const valorIdx = colLetterToIndex(cols.valor);
+
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      raw: true,
+      defval: null,
+    });
+    for (const row of rows) {
+      if (!row) continue;
+      const notaRaw = row[notaIdx];
+      const valorRaw = row[valorIdx];
+      const nota = normalizeNota(notaRaw);
+      if (!nota || nota.length < 1) continue;
+      // skip if header-like (non-numeric in nota cell already filtered by normalize)
+      const valor = parseNumber(valorRaw);
+      records.push({ nota, valor });
+    }
+  }
+  return records;
+}
+
+export type DominioRecord = ParsedRecord;
+
+export async function parseDominioPdf(file: File): Promise<DominioRecord[]> {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+
+  const records: DominioRecord[] = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    const items = tc.items as any[];
+
+    // Group items by row using y coordinate (rounded)
+    const rowsMap = new Map<number, { x: number; str: string }[]>();
+    for (const it of items) {
+      const y = Math.round(it.transform[5]);
+      const x = it.transform[4];
+      const str = (it.str ?? "").toString();
+      if (!str.trim()) continue;
+      // bucket within 2px
+      let key = y;
+      for (const k of rowsMap.keys()) {
+        if (Math.abs(k - y) <= 2) {
+          key = k;
+          break;
+        }
+      }
+      if (!rowsMap.has(key)) rowsMap.set(key, []);
+      rowsMap.get(key)!.push({ x, str });
+    }
+
+    const sortedRows = [...rowsMap.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([, arr]) => arr.sort((a, b) => a.x - b.x));
+
+    // Find header row containing "Nota" and "Valor Contábil"
+    let notaX: number | null = null;
+    let valorX: number | null = null;
+    let nextValorX: number | null = null;
+
+    for (const row of sortedRows) {
+      const joined = row.map((r) => r.str).join(" ").toLowerCase();
+      if (joined.includes("nota") && joined.includes("contábil")) {
+        // identify positions
+        for (let i = 0; i < row.length; i++) {
+          const s = row[i].str.toLowerCase().trim();
+          if (s === "nota" || s.startsWith("nota")) notaX = row[i].x;
+          if (s.includes("contábil") || s.includes("contabil")) {
+            valorX = row[i].x;
+            // try to capture column to the right of valor
+            if (i + 1 < row.length) nextValorX = row[i + 1].x;
+          }
+        }
+        if (notaX !== null && valorX !== null) {
+          // process subsequent (lower y) rows
+          const headerIdx = sortedRows.indexOf(row);
+          for (let r = headerIdx + 1; r < sortedRows.length; r++) {
+            const dataRow = sortedRows[r];
+            // find item closest to notaX
+            const notaItem = dataRow.reduce<null | { x: number; str: string; d: number }>(
+              (best, it) => {
+                const d = Math.abs(it.x - notaX!);
+                if (best === null || d < best.d) return { ...it, d };
+                return best;
+              },
+              null,
+            );
+            // valor: items between valorX and nextValorX (or rightmost near valorX)
+            const valorItems = dataRow.filter((it) => {
+              if (nextValorX !== null) {
+                return it.x >= valorX! - 10 && it.x < nextValorX - 5;
+              }
+              return Math.abs(it.x - valorX!) < 60;
+            });
+
+            if (!notaItem) continue;
+            const notaStr = normalizeNota(notaItem.str);
+            if (!notaStr) continue;
+            const valorStr = valorItems.map((v) => v.str).join("");
+            const valor = parseNumber(valorStr);
+            records.push({ nota: notaStr, valor });
+          }
+          break; // header processed for this page
+        }
+      }
+    }
+  }
+
+  return records;
+}
+
+export type CompareResult = {
+  jettax: { count: number; total: number };
+  portal: { count: number; total: number };
+  combinedClient: { count: number; total: number; duplicates: number };
+  dominio: { count: number; total: number };
+  diffCount: number;
+  diffTotal: number;
+};
+
+export function compare(
+  jettax: ParsedRecord[],
+  portal: ParsedRecord[],
+  dominio: DominioRecord[],
+): CompareResult {
+  const sumValid = (arr: ParsedRecord[]) => {
+    // dedupe internally too (by nota)
+    const map = new Map<string, number>();
+    for (const r of arr) {
+      if (!map.has(r.nota)) map.set(r.nota, r.valor);
+    }
+    let total = 0;
+    map.forEach((v) => (total += v));
+    return { count: map.size, total };
+  };
+
+  const jStat = sumValid(jettax);
+  const pStat = sumValid(portal);
+
+  // Combine deduplicating across both files
+  const combined = new Map<string, number>();
+  let duplicates = 0;
+  for (const r of jettax) {
+    if (!combined.has(r.nota)) combined.set(r.nota, r.valor);
+  }
+  for (const r of portal) {
+    if (combined.has(r.nota)) {
+      duplicates++;
+    } else {
+      combined.set(r.nota, r.valor);
+    }
+  }
+  let combinedTotal = 0;
+  combined.forEach((v) => (combinedTotal += v));
+
+  const dMap = new Map<string, number>();
+  for (const r of dominio) {
+    if (!dMap.has(r.nota)) dMap.set(r.nota, r.valor);
+  }
+  let dTotal = 0;
+  dMap.forEach((v) => (dTotal += v));
+
+  return {
+    jettax: jStat,
+    portal: pStat,
+    combinedClient: {
+      count: combined.size,
+      total: combinedTotal,
+      duplicates,
+    },
+    dominio: { count: dMap.size, total: dTotal },
+    diffCount: combined.size - dMap.size,
+    diffTotal: combinedTotal - dTotal,
+  };
+}
+
+export const fmtMoney = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
