@@ -263,7 +263,7 @@ export function compare(
     if (!dMap.has(r.nota)) dMap.set(r.nota, r.valor);
   }
   let dTotal = 0;
-  dMap.forEach((v) => (dTotal += v));
+  for (const r of dominio) dTotal += r.valor;
 
   return {
     jettax: jStat,
