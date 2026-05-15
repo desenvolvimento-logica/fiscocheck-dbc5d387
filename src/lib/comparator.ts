@@ -145,26 +145,28 @@ export async function parseDominioPdf(
     let notaX: number | null = null;
     let valorX: number | null = null;
     let nextValorX: number | null = null;
+    let especieX: number | null = null;
+    let especieNextX: number | null = null;
 
     for (const row of sortedRows) {
       const joined = row.map((r) => r.str).join(" ").toLowerCase();
       if (joined.includes("nota") && joined.includes("contábil")) {
-        // identify positions
         for (let i = 0; i < row.length; i++) {
           const s = row[i].str.toLowerCase().trim();
           if (s === "nota" || s.startsWith("nota")) notaX = row[i].x;
           if (s.includes("contábil") || s.includes("contabil")) {
             valorX = row[i].x;
-            // try to capture column to the right of valor
             if (i + 1 < row.length) nextValorX = row[i + 1].x;
+          }
+          if (s.includes("espécie") || s.includes("especie")) {
+            especieX = row[i].x;
+            if (i + 1 < row.length) especieNextX = row[i + 1].x;
           }
         }
         if (notaX !== null && valorX !== null) {
-          // process subsequent (lower y) rows
           const headerIdx = sortedRows.indexOf(row);
           for (let r = headerIdx + 1; r < sortedRows.length; r++) {
             const dataRow = sortedRows[r];
-            // find item closest to notaX
             const notaItem = dataRow.reduce<null | { x: number; str: string; d: number }>(
               (best, it) => {
                 const d = Math.abs(it.x - notaX!);
@@ -173,7 +175,6 @@ export async function parseDominioPdf(
               },
               null,
             );
-            // valor: items between valorX and nextValorX (or rightmost near valorX)
             const valorItems = dataRow.filter((it) => {
               if (nextValorX !== null) {
                 return it.x >= valorX! - 10 && it.x < nextValorX - 5;
@@ -184,11 +185,27 @@ export async function parseDominioPdf(
             if (!notaItem) continue;
             const notaStr = normalizeNota(notaItem.str);
             if (!notaStr) continue;
+
+            // Filter by Espécie when column is found
+            if (especieX !== null && allowedEspecies.size > 0) {
+              const especieItems = dataRow.filter((it) => {
+                if (especieNextX !== null) {
+                  return it.x >= especieX! - 10 && it.x < especieNextX - 5;
+                }
+                return Math.abs(it.x - especieX!) < 40;
+              });
+              const especieStr = especieItems
+                .map((v) => v.str)
+                .join("")
+                .replace(/\D+/g, "");
+              if (!allowedEspecies.has(especieStr)) continue;
+            }
+
             const valorStr = valorItems.map((v) => v.str).join("");
             const valor = parseNumber(valorStr);
             records.push({ nota: notaStr, valor });
           }
-          break; // header processed for this page
+          break;
         }
       }
     }
