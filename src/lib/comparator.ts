@@ -9,13 +9,13 @@ export type Movement = "entrada" | "saida";
 export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
 
 // Column letters per spec for Jettax (and assumed same for Portal Nacional)
-const COLS: Record<string, { nota: string; valor: string }> = {
-  "entrada-NFE": { nota: "D", valor: "T" },
-  "entrada-CTE": { nota: "C", valor: "BI" },
-  "entrada-NFSe": { nota: "A", valor: "L" },
-  "saida-NFE": { nota: "D", valor: "T" },
+const COLS: Record<string, { nota: string; valor: string; fornecedor?: string }> = {
+  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I" },
+  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M" },
+  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F" },
+  "saida-NFE": { nota: "D", valor: "T", fornecedor: "N" },
   "saida-NFCe": { nota: "D", valor: "T" },
-  "saida-NFSe": { nota: "A", valor: "L" },
+  "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
 };
 
 export function getColumns(mov: Movement, doc: DocType) {
@@ -51,7 +51,7 @@ function parseNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
-export type ParsedRecord = { nota: string; valor: number };
+export type ParsedRecord = { nota: string; valor: number; fornecedor?: string };
 
 export async function parseExcel(
   file: File,
@@ -65,6 +65,7 @@ export async function parseExcel(
   const records: ParsedRecord[] = [];
   const notaIdx = colLetterToIndex(cols.nota);
   const valorIdx = colLetterToIndex(cols.valor);
+  const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
 
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
@@ -79,9 +80,10 @@ export async function parseExcel(
       const valorRaw = row[valorIdx];
       const nota = normalizeNota(notaRaw);
       if (!nota || nota.length < 1) continue;
-      // skip if header-like (non-numeric in nota cell already filtered by normalize)
       const valor = parseNumber(valorRaw);
-      records.push({ nota, valor });
+      const fornecedor =
+        fornIdx >= 0 && row[fornIdx] != null ? String(row[fornIdx]).trim() : undefined;
+      records.push({ nota, valor, fornecedor });
     }
   }
   return records;
@@ -147,6 +149,8 @@ export async function parseDominioPdf(
     let nextValorX: number | null = null;
     let especieX: number | null = null;
     let especieNextX: number | null = null;
+    let fornecedorX: number | null = null;
+    let fornecedorNextX: number | null = null;
 
     for (const row of sortedRows) {
       const joined = row.map((r) => r.str).join(" ").toLowerCase();
@@ -161,6 +165,10 @@ export async function parseDominioPdf(
           if (s.includes("espécie") || s.includes("especie")) {
             especieX = row[i].x;
             if (i + 1 < row.length) especieNextX = row[i + 1].x;
+          }
+          if (s.includes("fornecedor") || s.includes("participante")) {
+            fornecedorX = row[i].x;
+            if (i + 1 < row.length) fornecedorNextX = row[i + 1].x;
           }
         }
         if (notaX !== null && valorX !== null) {
@@ -201,9 +209,25 @@ export async function parseDominioPdf(
               if (!allowedEspecies.has(especieStr)) continue;
             }
 
+            let fornecedor: string | undefined;
+            if (fornecedorX !== null) {
+              const fornItems = dataRow.filter((it) => {
+                if (fornecedorNextX !== null) {
+                  return it.x >= fornecedorX! - 10 && it.x < fornecedorNextX - 5;
+                }
+                return it.x >= fornecedorX! - 10 && it.x < fornecedorX! + 200;
+              });
+              fornecedor = fornItems
+                .map((v) => v.str)
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (!fornecedor) fornecedor = undefined;
+            }
+
             const valorStr = valorItems.map((v) => v.str).join("");
             const valor = parseNumber(valorStr);
-            records.push({ nota: notaStr, valor });
+            records.push({ nota: notaStr, valor, fornecedor });
           }
           break;
         }
@@ -214,6 +238,8 @@ export async function parseDominioPdf(
   return records;
 }
 
+export type MissingRecord = { nota: string; fornecedor?: string; valor: number };
+
 export type CompareResult = {
   jettax: { count: number; total: number };
   portal: { count: number; total: number };
@@ -221,6 +247,8 @@ export type CompareResult = {
   dominio: { count: number; total: number };
   diffCount: number;
   diffTotal: number;
+  missingInDominio: MissingRecord[]; // no cliente, ausentes no Domínio
+  missingInClient: MissingRecord[]; // no Domínio, ausentes no cliente
 };
 
 export function compare(
@@ -229,7 +257,6 @@ export function compare(
   dominio: DominioRecord[],
 ): CompareResult {
   const sumValid = (arr: ParsedRecord[]) => {
-    // dedupe internally too (by nota)
     const map = new Map<string, number>();
     for (const r of arr) {
       if (!map.has(r.nota)) map.set(r.nota, r.valor);
@@ -242,28 +269,43 @@ export function compare(
   const jStat = sumValid(jettax);
   const pStat = sumValid(portal);
 
-  // Combine deduplicating across both files
-  const combined = new Map<string, number>();
+  // Combine deduplicating across both files (preservar fornecedor)
+  const combined = new Map<string, MissingRecord>();
   let duplicates = 0;
   for (const r of jettax) {
-    if (!combined.has(r.nota)) combined.set(r.nota, r.valor);
+    if (!combined.has(r.nota))
+      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
   }
   for (const r of portal) {
     if (combined.has(r.nota)) {
       duplicates++;
     } else {
-      combined.set(r.nota, r.valor);
+      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
     }
   }
   let combinedTotal = 0;
-  combined.forEach((v) => (combinedTotal += v));
+  combined.forEach((v) => (combinedTotal += v.valor));
 
-  const dMap = new Map<string, number>();
+  const dMap = new Map<string, MissingRecord>();
   for (const r of dominio) {
-    if (!dMap.has(r.nota)) dMap.set(r.nota, r.valor);
+    if (!dMap.has(r.nota))
+      dMap.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
   }
   let dTotal = 0;
   for (const r of dominio) dTotal += r.valor;
+
+  const missingInDominio: MissingRecord[] = [];
+  combined.forEach((rec, nota) => {
+    if (!dMap.has(nota)) missingInDominio.push(rec);
+  });
+  const missingInClient: MissingRecord[] = [];
+  dMap.forEach((rec, nota) => {
+    if (!combined.has(nota)) missingInClient.push(rec);
+  });
+
+  const byNota = (a: MissingRecord, b: MissingRecord) => a.nota.localeCompare(b.nota);
+  missingInDominio.sort(byNota);
+  missingInClient.sort(byNota);
 
   return {
     jettax: jStat,
@@ -276,6 +318,8 @@ export function compare(
     dominio: { count: dMap.size, total: dTotal },
     diffCount: combined.size - dMap.size,
     diffTotal: combinedTotal - dTotal,
+    missingInDominio,
+    missingInClient,
   };
 }
 

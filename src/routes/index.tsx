@@ -421,7 +421,64 @@ function Results({ result }: { result: CompareResult }) {
           />
         </div>
       </Card>
+
+      <MissingPanel
+        title="Notas no cliente, ausentes no Domínio"
+        emptyLabel="Nenhuma nota faltando no Domínio."
+        items={result.missingInDominio}
+      />
+      <MissingPanel
+        title="Notas no Domínio, ausentes no cliente"
+        emptyLabel="Nenhuma nota faltando no cliente."
+        items={result.missingInClient}
+      />
     </div>
+  );
+}
+
+function MissingPanel({
+  title,
+  emptyLabel,
+  items,
+}: {
+  title: string;
+  emptyLabel: string;
+  items: { nota: string; fornecedor?: string; valor: number }[];
+}) {
+  const total = items.reduce((s, i) => s + i.valor, 0);
+  return (
+    <Card className="p-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h3 className="font-semibold">{title}</h3>
+        <div className="text-xs text-muted-foreground">
+          {items.length} {items.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
+        </div>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground border-b">
+                <th className="py-2 pr-4 font-medium">Nota</th>
+                <th className="py-2 pr-4 font-medium">Fornecedor</th>
+                <th className="py-2 pr-2 font-medium text-right">Valor Contábil</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it, i) => (
+                <tr key={`${it.nota}-${i}`} className="border-b last:border-0">
+                  <td className="py-2 pr-4 font-mono">{it.nota}</td>
+                  <td className="py-2 pr-4">{it.fornecedor || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }
 
