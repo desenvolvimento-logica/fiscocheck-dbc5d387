@@ -145,6 +145,7 @@ export async function parseDominioPdf(
 
     // Find header row containing "Nota" and "Valor Contábil"
     let notaX: number | null = null;
+    let notaNextX: number | null = null;
     let valorX: number | null = null;
     let nextValorX: number | null = null;
     let especieX: number | null = null;
@@ -157,7 +158,10 @@ export async function parseDominioPdf(
       if (joined.includes("nota") && joined.includes("contábil")) {
         for (let i = 0; i < row.length; i++) {
           const s = row[i].str.toLowerCase().trim();
-          if (s === "nota" || s.startsWith("nota")) notaX = row[i].x;
+          if (s === "nota" || s.startsWith("nota")) {
+            notaX = row[i].x;
+            if (i + 1 < row.length) notaNextX = row[i + 1].x;
+          }
           if (s.includes("contábil") || s.includes("contabil")) {
             valorX = row[i].x;
             if (i + 1 < row.length) nextValorX = row[i + 1].x;
@@ -175,14 +179,16 @@ export async function parseDominioPdf(
           const headerIdx = sortedRows.indexOf(row);
           for (let r = headerIdx + 1; r < sortedRows.length; r++) {
             const dataRow = sortedRows[r];
-            const notaItem = dataRow.reduce<null | { x: number; str: string; d: number }>(
-              (best, it) => {
-                const d = Math.abs(it.x - notaX!);
-                if (best === null || d < best.d) return { ...it, d };
-                return best;
-              },
-              null,
-            );
+            // Collect all items inside the Nota column (between notaX and next column header x)
+            const notaItems = dataRow.filter((it) => {
+              if (notaNextX !== null) {
+                return it.x >= notaX! - 10 && it.x < notaNextX - 5;
+              }
+              return Math.abs(it.x - notaX!) < 40;
+            });
+            const notaItem = notaItems.length
+              ? { x: notaItems[0].x, str: notaItems.map((v) => v.str).join("") }
+              : null;
             const valorItems = dataRow.filter((it) => {
               if (nextValorX !== null) {
                 return it.x >= valorX! - 10 && it.x < nextValorX - 5;
