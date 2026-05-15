@@ -9,13 +9,13 @@ export type Movement = "entrada" | "saida";
 export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
 
 // Column letters per spec for Jettax (and assumed same for Portal Nacional)
-const COLS: Record<string, { nota: string; valor: string }> = {
-  "entrada-NFE": { nota: "D", valor: "T" },
-  "entrada-CTE": { nota: "C", valor: "BI" },
-  "entrada-NFSe": { nota: "A", valor: "L" },
-  "saida-NFE": { nota: "D", valor: "T" },
+const COLS: Record<string, { nota: string; valor: string; fornecedor?: string }> = {
+  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I" },
+  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M" },
+  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F" },
+  "saida-NFE": { nota: "D", valor: "T", fornecedor: "N" },
   "saida-NFCe": { nota: "D", valor: "T" },
-  "saida-NFSe": { nota: "A", valor: "L" },
+  "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
 };
 
 export function getColumns(mov: Movement, doc: DocType) {
