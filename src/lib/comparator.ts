@@ -108,7 +108,13 @@ export async function parseExcel(
 export type DominioRecord = ParsedRecord & { especie?: string };
 
 // Dominio Excel — colunas fixas
-const DOMINIO_COLS = { nota: "F", especie: "I", fornecedor: "K", valor: "T" } as const;
+const DOMINIO_COLS = {
+  nota: "F",
+  especie: "I",
+  fornecedor: "K",
+  cfop: "N",
+  valor: "T",
+} as const;
 
 export async function parseDominioExcel(
   file: File,
@@ -121,6 +127,7 @@ export async function parseDominioExcel(
   const notaIdx = colLetterToIndex(DOMINIO_COLS.nota);
   const espIdx = colLetterToIndex(DOMINIO_COLS.especie);
   const fornIdx = colLetterToIndex(DOMINIO_COLS.fornecedor);
+  const cfopIdx = colLetterToIndex(DOMINIO_COLS.cfop);
   const valorIdx = colLetterToIndex(DOMINIO_COLS.valor);
   const records: DominioRecord[] = [];
   for (const sheetName of wb.SheetNames) {
@@ -140,7 +147,11 @@ export async function parseDominioExcel(
       const valor = parseNumber(row[valorIdx]);
       const fornecedor =
         row[fornIdx] != null ? String(row[fornIdx]).trim() || undefined : undefined;
-      records.push({ nota, valor, fornecedor, especie });
+      const cfop =
+        row[cfopIdx] != null
+          ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
+          : undefined;
+      records.push({ nota, valor, fornecedor, especie, cfop });
     }
   }
   return records;
