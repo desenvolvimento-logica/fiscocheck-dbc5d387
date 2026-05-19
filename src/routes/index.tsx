@@ -385,7 +385,7 @@ function Results({ result }: { result: CompareResult }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <SummaryCard title="Jettax" count={result.jettax.count} total={result.jettax.total} />
         <SummaryCard title="Portal Nacional" count={result.portal.count} total={result.portal.total} />
-        <SummaryCard title="Domínio (PDF)" count={result.dominio.count} total={result.dominio.total} highlight />
+        <SummaryCard title="Domínio" count={result.dominio.count} total={result.dominio.total} highlight />
       </div>
 
       <Card className="p-5">
