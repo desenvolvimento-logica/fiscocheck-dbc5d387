@@ -126,7 +126,7 @@ export async function parseExcel(
       records.push({ nota, valor, fornecedor, cfop });
     }
   }
-  return records;
+  return { records, clientName };
 }
 
 export type DominioRecord = ParsedRecord & { especie?: string };
