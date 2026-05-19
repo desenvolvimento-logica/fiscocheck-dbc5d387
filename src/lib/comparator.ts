@@ -11,11 +11,11 @@ export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
 // Column letters per spec for Jettax (and assumed same for Portal Nacional)
 const COLS: Record<
   string,
-  { nota: string; valor: string; fornecedor?: string; cfop?: string }
+  { nota: string; valor: string; fornecedor?: string; cfop?: string; status?: string }
 > = {
-  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U" },
-  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ" },
-  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F" },
+  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U", status: "A" },
+  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ", status: "G" },
+  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F", status: "K" },
   "saida-NFE": { nota: "D", valor: "T", fornecedor: "N", cfop: "U" },
   "saida-NFCe": { nota: "D", valor: "T", cfop: "U" },
   "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
@@ -75,6 +75,7 @@ export async function parseExcel(
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
   const cfopIdx = cols.cfop ? colLetterToIndex(cols.cfop) : -1;
+  const statusIdx = cols.status ? colLetterToIndex(cols.status) : -1;
 
   // Para Entrada NFE, considerar apenas a primeira aba (Relatório Detalhado por Nota)
   const sheetNames =
@@ -88,6 +89,13 @@ export async function parseExcel(
     });
     for (const row of rows) {
       if (!row) continue;
+      if (statusIdx >= 0 && row[statusIdx] != null) {
+        const status = String(row[statusIdx])
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        if (status.includes("cancelad")) continue;
+      }
       const notaRaw = row[notaIdx];
       const valorRaw = row[valorIdx];
       const nota = normalizeNota(notaRaw);
