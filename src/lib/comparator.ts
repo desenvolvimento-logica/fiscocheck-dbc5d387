@@ -264,7 +264,13 @@ export function compare(
   portal: ParsedRecord[],
   dominio: DominioRecord[],
 ): CompareResult {
-  const sumValid = (arr: ParsedRecord[]) => {
+  const bothProvided = jettax.length > 0 && portal.length > 0;
+  const sumStat = (arr: ParsedRecord[]) => {
+    if (!bothProvided) {
+      let total = 0;
+      for (const r of arr) total += r.valor;
+      return { count: arr.length, total };
+    }
     const map = new Map<string, number>();
     for (const r of arr) {
       if (!map.has(r.nota)) map.set(r.nota, r.valor);
@@ -274,8 +280,8 @@ export function compare(
     return { count: map.size, total };
   };
 
-  const jStat = sumValid(jettax);
-  const pStat = sumValid(portal);
+  const jStat = sumStat(jettax);
+  const pStat = sumStat(portal);
 
   // Combine: only deduplicate when BOTH client files are provided.
   // When only one file (Jettax OR Portal) is provided, keep all rows.
