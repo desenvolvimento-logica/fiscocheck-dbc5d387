@@ -426,21 +426,6 @@ function Results({ result }: { result: CompareResult }) {
         </div>
       </Card>
 
-      {(() => {
-        const diff = result.combinedClient.count - result.dominio.count;
-        if (diff === 0) return null;
-        const items =
-          diff > 0
-            ? result.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const }))
-            : result.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const }));
-        return (
-          <MissingPanel
-            title={`Notas que geraram a diferença na quantidade (${diff > 0 ? "+" : ""}${diff})`}
-            emptyLabel="Sem notas para exibir."
-            items={items}
-          />
-        );
-      })()}
 
       <MissingPanel
         title="Notas com diferença"
