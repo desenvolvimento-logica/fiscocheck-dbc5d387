@@ -91,6 +91,45 @@ export async function parseExcel(
 
 export type DominioRecord = ParsedRecord;
 
+// Dominio Excel — colunas fixas
+const DOMINIO_COLS = { nota: "F", especie: "I", fornecedor: "K", valor: "T" } as const;
+
+export async function parseDominioExcel(
+  file: File,
+  mov: Movement,
+  doc: DocType,
+): Promise<DominioRecord[]> {
+  const allowed = new Set(getEspecieCodes(mov, doc));
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const notaIdx = colLetterToIndex(DOMINIO_COLS.nota);
+  const espIdx = colLetterToIndex(DOMINIO_COLS.especie);
+  const fornIdx = colLetterToIndex(DOMINIO_COLS.fornecedor);
+  const valorIdx = colLetterToIndex(DOMINIO_COLS.valor);
+  const records: DominioRecord[] = [];
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      raw: true,
+      defval: null,
+    });
+    for (const row of rows) {
+      if (!row) continue;
+      const especie =
+        row[espIdx] != null ? String(row[espIdx]).trim().replace(/\D+/g, "") : "";
+      if (allowed.size > 0 && !allowed.has(especie)) continue;
+      const nota = normalizeNota(row[notaIdx]);
+      if (!nota) continue;
+      const valor = parseNumber(row[valorIdx]);
+      const fornecedor =
+        row[fornIdx] != null ? String(row[fornIdx]).trim() || undefined : undefined;
+      records.push({ nota, valor, fornecedor });
+    }
+  }
+  return records;
+}
+
 const ESPECIE_FILTER: Record<string, string[]> = {
   "entrada-NFE": ["36"],
   "entrada-CTE": ["38"],
