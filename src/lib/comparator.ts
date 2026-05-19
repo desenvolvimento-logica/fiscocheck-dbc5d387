@@ -9,12 +9,15 @@ export type Movement = "entrada" | "saida";
 export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
 
 // Column letters per spec for Jettax (and assumed same for Portal Nacional)
-const COLS: Record<string, { nota: string; valor: string; fornecedor?: string }> = {
-  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I" },
-  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M" },
+const COLS: Record<
+  string,
+  { nota: string; valor: string; fornecedor?: string; cfop?: string }
+> = {
+  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U" },
+  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ" },
   "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F" },
-  "saida-NFE": { nota: "D", valor: "T", fornecedor: "N" },
-  "saida-NFCe": { nota: "D", valor: "T" },
+  "saida-NFE": { nota: "D", valor: "T", fornecedor: "N", cfop: "U" },
+  "saida-NFCe": { nota: "D", valor: "T", cfop: "U" },
   "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
 };
 
@@ -51,7 +54,12 @@ function parseNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
-export type ParsedRecord = { nota: string; valor: number; fornecedor?: string };
+export type ParsedRecord = {
+  nota: string;
+  valor: number;
+  fornecedor?: string;
+  cfop?: string;
+};
 
 export async function parseExcel(
   file: File,
@@ -66,6 +74,7 @@ export async function parseExcel(
   const notaIdx = colLetterToIndex(cols.nota);
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
+  const cfopIdx = cols.cfop ? colLetterToIndex(cols.cfop) : -1;
 
   // Para Entrada NFE, considerar apenas a primeira aba (Relatório Detalhado por Nota)
   const sheetNames =
@@ -86,7 +95,11 @@ export async function parseExcel(
       const valor = parseNumber(valorRaw);
       const fornecedor =
         fornIdx >= 0 && row[fornIdx] != null ? String(row[fornIdx]).trim() : undefined;
-      records.push({ nota, valor, fornecedor });
+      const cfop =
+        cfopIdx >= 0 && row[cfopIdx] != null
+          ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
+          : undefined;
+      records.push({ nota, valor, fornecedor, cfop });
     }
   }
   return records;
@@ -95,7 +108,13 @@ export async function parseExcel(
 export type DominioRecord = ParsedRecord & { especie?: string };
 
 // Dominio Excel — colunas fixas
-const DOMINIO_COLS = { nota: "F", especie: "I", fornecedor: "K", valor: "T" } as const;
+const DOMINIO_COLS = {
+  nota: "F",
+  especie: "I",
+  fornecedor: "K",
+  cfop: "N",
+  valor: "T",
+} as const;
 
 export async function parseDominioExcel(
   file: File,
@@ -108,6 +127,7 @@ export async function parseDominioExcel(
   const notaIdx = colLetterToIndex(DOMINIO_COLS.nota);
   const espIdx = colLetterToIndex(DOMINIO_COLS.especie);
   const fornIdx = colLetterToIndex(DOMINIO_COLS.fornecedor);
+  const cfopIdx = colLetterToIndex(DOMINIO_COLS.cfop);
   const valorIdx = colLetterToIndex(DOMINIO_COLS.valor);
   const records: DominioRecord[] = [];
   for (const sheetName of wb.SheetNames) {
@@ -127,7 +147,11 @@ export async function parseDominioExcel(
       const valor = parseNumber(row[valorIdx]);
       const fornecedor =
         row[fornIdx] != null ? String(row[fornIdx]).trim() || undefined : undefined;
-      records.push({ nota, valor, fornecedor, especie });
+      const cfop =
+        row[cfopIdx] != null
+          ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
+          : undefined;
+      records.push({ nota, valor, fornecedor, especie, cfop });
     }
   }
   return records;
@@ -313,7 +337,10 @@ export function compare(
   const bothProvided = jettax.length > 0 && portal.length > 0;
   // Chave de duplicidade do cliente: nota + fornecedor
   // (espécie é implícita pelo tipo de documento selecionado)
-  const clientKey = (r: ParsedRecord) => `${r.nota}|${normFornec(r.fornecedor)}`;
+  // Chave de duplicidade do cliente: nota + fornecedor + cfop + valor
+  // (espécie é implícita pelo tipo de documento selecionado)
+  const clientKey = (r: ParsedRecord) =>
+    `${r.nota}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
 
   const sumStat = (arr: ParsedRecord[]) => {
     if (!bothProvided) {
@@ -362,9 +389,9 @@ export function compare(
   const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
   const combinedCount = combinedList.length;
 
-  // Dedup do Domínio: nota + espécie + fornecedor
+  // Dedup do Domínio: nota + espécie + fornecedor + cfop + valor
   const dominioKey = (r: DominioRecord) =>
-    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}`;
+    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
   const dMap = new Map<string, MissingRecord>();
   const dominioNotas = new Set<string>();
   for (const r of dominio) {
