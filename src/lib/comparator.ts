@@ -337,7 +337,10 @@ export function compare(
   const bothProvided = jettax.length > 0 && portal.length > 0;
   // Chave de duplicidade do cliente: nota + fornecedor
   // (espécie é implícita pelo tipo de documento selecionado)
-  const clientKey = (r: ParsedRecord) => `${r.nota}|${normFornec(r.fornecedor)}`;
+  // Chave de duplicidade do cliente: nota + fornecedor + cfop + valor
+  // (espécie é implícita pelo tipo de documento selecionado)
+  const clientKey = (r: ParsedRecord) =>
+    `${r.nota}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
 
   const sumStat = (arr: ParsedRecord[]) => {
     if (!bothProvided) {
