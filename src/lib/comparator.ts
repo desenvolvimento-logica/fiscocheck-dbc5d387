@@ -61,16 +61,32 @@ export type ParsedRecord = {
   cfop?: string;
 };
 
+const CLIENT_NAME_CELL: Record<string, string> = {
+  "entrada-NFE": "N2",
+  "entrada-CTE": "J2",
+  "entrada-NFSe": "AA2",
+};
+
 export async function parseExcel(
   file: File,
   mov: Movement,
   doc: DocType,
-): Promise<ParsedRecord[]> {
+): Promise<{ records: ParsedRecord[]; clientName?: string }> {
   const cols = getColumns(mov, doc);
-  if (!cols) return [];
+  if (!cols) return { records: [] };
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
   const records: ParsedRecord[] = [];
+  const clientCell = CLIENT_NAME_CELL[`${mov}-${doc}`];
+  let clientName: string | undefined;
+  if (clientCell) {
+    const firstSheet = wb.Sheets[wb.SheetNames[0]];
+    const cell = firstSheet?.[clientCell];
+    if (cell?.v != null) {
+      const v = String(cell.v).trim();
+      if (v) clientName = v;
+    }
+  }
   const notaIdx = colLetterToIndex(cols.nota);
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
@@ -110,7 +126,7 @@ export async function parseExcel(
       records.push({ nota, valor, fornecedor, cfop });
     }
   }
-  return records;
+  return { records, clientName };
 }
 
 export type DominioRecord = ParsedRecord & { especie?: string };
