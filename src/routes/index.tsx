@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import {
   parseExcel,
   parseDominioPdf,
+  parseDominioExcel,
   compare,
   type Movement,
   type DocType,
@@ -284,10 +285,13 @@ function CompareStep({
     if (!dominio) return;
     setLoading(true);
     try {
+      const isExcelDom = /\.xlsx?$/i.test(dominio.name);
       const [jRecs, pRecs, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve([]),
         portal ? parseExcel(portal, movement, docType) : Promise.resolve([]),
-        parseDominioPdf(dominio, movement, docType),
+        isExcelDom
+          ? parseDominioExcel(dominio, movement, docType)
+          : parseDominioPdf(dominio, movement, docType),
       ]);
       setResult(compare(jRecs, pRecs, dRecs));
     } catch (e: any) {
@@ -338,11 +342,11 @@ function CompareStep({
           icon={<FileSpreadsheet className="h-5 w-5" />}
         />
         <FileInput
-          label="Relatório Domínio (PDF)"
-          accept=".pdf"
+          label="Relatório Domínio (Excel ou PDF)"
+          accept=".xlsx,.xls,.pdf"
           file={dominio}
           onChange={setDominio}
-          icon={<FileText className="h-5 w-5" />}
+          icon={<FileSpreadsheet className="h-5 w-5" />}
         />
       </div>
 
@@ -381,7 +385,7 @@ function Results({ result }: { result: CompareResult }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <SummaryCard title="Jettax" count={result.jettax.count} total={result.jettax.total} />
         <SummaryCard title="Portal Nacional" count={result.portal.count} total={result.portal.total} />
-        <SummaryCard title="Domínio (PDF)" count={result.dominio.count} total={result.dominio.total} highlight />
+        <SummaryCard title="Domínio" count={result.dominio.count} total={result.dominio.total} highlight />
       </div>
 
       <Card className="p-5">
