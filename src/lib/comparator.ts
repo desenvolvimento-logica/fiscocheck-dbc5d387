@@ -311,9 +311,13 @@ export function compare(
   for (const r of dominio) dTotal += r.valor;
 
   const missingInDominio: MissingRecord[] = [];
-  combined.forEach((rec, nota) => {
-    if (!dMap.has(nota)) missingInDominio.push(rec);
-  });
+  const seenMissing = new Set<string>();
+  for (const rec of combinedList) {
+    if (!dMap.has(rec.nota) && !seenMissing.has(rec.nota)) {
+      seenMissing.add(rec.nota);
+      missingInDominio.push(rec);
+    }
+  }
   const missingInClient: MissingRecord[] = [];
   dMap.forEach((rec, nota) => {
     if (!combined.has(nota)) missingInClient.push(rec);
@@ -327,12 +331,12 @@ export function compare(
     jettax: jStat,
     portal: pStat,
     combinedClient: {
-      count: combined.size,
+      count: combinedCount,
       total: combinedTotal,
       duplicates,
     },
     dominio: { count: dMap.size, total: dTotal },
-    diffCount: combined.size - dMap.size,
+    diffCount: combinedCount - dMap.size,
     diffTotal: combinedTotal - dTotal,
     missingInDominio,
     missingInClient,
