@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import {
   parseExcel,
   parseDominioPdf,
+  parseDominioExcel,
   compare,
   type Movement,
   type DocType,
