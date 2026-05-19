@@ -342,11 +342,11 @@ function CompareStep({
           icon={<FileSpreadsheet className="h-5 w-5" />}
         />
         <FileInput
-          label="Relatório Domínio (PDF)"
-          accept=".pdf"
+          label="Relatório Domínio (Excel ou PDF)"
+          accept=".xlsx,.xls,.pdf"
           file={dominio}
           onChange={setDominio}
-          icon={<FileText className="h-5 w-5" />}
+          icon={<FileSpreadsheet className="h-5 w-5" />}
         />
       </div>
 
