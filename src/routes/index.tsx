@@ -458,23 +458,44 @@ function MissingPanel({
   emptyLabel: string;
   items: { nota: string; fornecedor?: string; valor: number; origem: "Domínio" | "Cliente" }[];
 }) {
-  const total = items.reduce((s, i) => s + i.valor, 0);
   const ROW_H = 36;
   const VISIBLE = 10;
 
   const [classificacoes, setClassificacoes] = useState<Record<string, string>>({});
+  const [salvas, setSalvas] = useState<Record<string, string>>({});
   const keyFor = (it: { nota: string; origem: string }, i: number) =>
     `${it.nota}-${it.origem}-${i}`;
 
+  const visibleItems = items
+    .map((it, i) => ({ it, i, k: keyFor(it, i) }))
+    .filter(({ k }) => !salvas[k]);
+  const total = visibleItems.reduce((s, { it }) => s + it.valor, 0);
+
+  const salvar = () => {
+    setSalvas((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(classificacoes)) {
+        if (v) next[k] = v;
+      }
+      return next;
+    });
+    setClassificacoes({});
+  };
+
+  const pendentesParaSalvar = Object.values(classificacoes).filter(Boolean).length;
+
   const exportXlsx = async () => {
     const XLSX = await import("xlsx");
-    const rows = items.map((it, i) => ({
-      Nota: it.nota,
-      Fornecedor: it.fornecedor || "",
-      "Valor Contábil": it.valor,
-      "Diferença no": it.origem,
-      Classificação: classificacoes[keyFor(it, i)] || "",
-    }));
+    const rows = items.map((it, i) => {
+      const k = keyFor(it, i);
+      return {
+        Nota: it.nota,
+        Fornecedor: it.fornecedor || "",
+        "Valor Contábil": it.valor,
+        "Diferença no": it.origem,
+        Classificação: salvas[k] || classificacoes[k] || "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Notas");
@@ -488,7 +509,10 @@ function MissingPanel({
         <h3 className="font-semibold">{title}</h3>
         <div className="flex items-center gap-3">
           <div className="text-xs text-muted-foreground">
-            {items.length} {items.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
+            {visibleItems.length} {visibleItems.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
+            {Object.keys(salvas).length > 0 && (
+              <span className="ml-1">({Object.keys(salvas).length} ocultas)</span>
+            )}
           </div>
           {items.length > 0 && (
             <Button size="sm" variant="outline" onClick={exportXlsx}>
@@ -497,8 +521,10 @@ function MissingPanel({
           )}
         </div>
       </div>
-      {items.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
+      {visibleItems.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          {items.length === 0 ? emptyLabel : "Todas as notas foram classificadas."}
+        </p>
       ) : (
         <div className="mt-4">
           <div className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
@@ -510,12 +536,10 @@ function MissingPanel({
           </div>
           <div
             className="overflow-y-auto"
-            style={{ maxHeight: items.length > VISIBLE ? ROW_H * VISIBLE : undefined }}
+            style={{ maxHeight: visibleItems.length > VISIBLE ? ROW_H * VISIBLE : undefined }}
           >
             <div className="text-sm">
-              {items.map((it, i) => {
-                const k = keyFor(it, i);
-                return (
+              {visibleItems.map(({ it, k }) => (
                 <div
                   key={k}
                   className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 border-b last:border-0 items-center"
@@ -553,9 +577,19 @@ function MissingPanel({
                     </select>
                   </div>
                 </div>
-                );
-              })}
+              ))}
             </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button
+              size="sm"
+              onClick={salvar}
+              disabled={pendentesParaSalvar === 0}
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              Salvar Classificação
+              {pendentesParaSalvar > 0 && ` (${pendentesParaSalvar})`}
+            </Button>
           </div>
         </div>
       )}
