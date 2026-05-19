@@ -67,7 +67,10 @@ export async function parseExcel(
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
 
-  for (const sheetName of wb.SheetNames) {
+  // Para Entrada NFE, considerar apenas a primeira aba (Relatório Detalhado por Nota)
+  const sheetNames =
+    mov === "entrada" && doc === "NFE" ? wb.SheetNames.slice(0, 1) : wb.SheetNames;
+  for (const sheetName of sheetNames) {
     const ws = wb.Sheets[sheetName];
     const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
       header: 1,
