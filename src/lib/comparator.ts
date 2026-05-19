@@ -333,6 +333,8 @@ export function compare(
   missingInDominio.sort(byNota);
   missingInClient.sort(byNota);
 
+  const divergences: MissingRecord[] = [...missingInDominio, ...missingInClient].sort(byNota);
+
   return {
     jettax: jStat,
     portal: pStat,
@@ -346,6 +348,7 @@ export function compare(
     diffTotal: combinedTotal - dTotal,
     missingInDominio,
     missingInClient,
+    divergences,
   };
 }
 
