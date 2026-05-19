@@ -445,7 +445,7 @@ function MissingPanel({
 }: {
   title: string;
   emptyLabel: string;
-  items: { nota: string; fornecedor?: string; valor: number }[];
+  items: { nota: string; fornecedor?: string; valor: number; origem: "Domínio" | "Cliente" }[];
 }) {
   const total = items.reduce((s, i) => s + i.valor, 0);
   const ROW_H = 36;
@@ -457,6 +457,7 @@ function MissingPanel({
       Nota: it.nota,
       Fornecedor: it.fornecedor || "",
       "Valor Contábil": it.valor,
+      "Diferença no": it.origem,
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -484,10 +485,11 @@ function MissingPanel({
         <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
         <div className="mt-4">
-          <div className="grid grid-cols-[1fr_2fr_1fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
+          <div className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
             <div className="py-2 pr-4 font-medium">Nota</div>
             <div className="py-2 pr-4 font-medium">Fornecedor</div>
             <div className="py-2 pr-2 font-medium text-right">Valor Contábil</div>
+            <div className="py-2 pl-4 font-medium">Diferença no</div>
           </div>
           <div
             className="overflow-y-auto"
@@ -497,13 +499,24 @@ function MissingPanel({
               {items.map((it, i) => (
                 <div
                   key={`${it.nota}-${i}`}
-                  className="grid grid-cols-[1fr_2fr_1fr] gap-0 border-b last:border-0"
+                  className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-0 border-b last:border-0"
                 >
                   <div className="py-2 pr-4 font-mono">{it.nota}</div>
                   <div className="py-2 pr-4">
                     {it.fornecedor || <span className="text-muted-foreground">—</span>}
                   </div>
                   <div className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</div>
+                  <div className="py-2 pl-4">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        it.origem === "Domínio"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-accent/20 text-accent-foreground"
+                      }`}
+                    >
+                      {it.origem}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
