@@ -427,19 +427,12 @@ function Results({ result }: { result: CompareResult }) {
       </Card>
 
       <MissingPanel
-        title="Notas que deram diferença"
+        title="Notas com diferença"
         emptyLabel="Nenhuma divergência encontrada."
-        items={result.divergences}
-      />
-      <MissingPanel
-        title="Notas no cliente, ausentes no Domínio"
-        emptyLabel="Nenhuma nota faltando no Domínio."
-        items={result.missingInDominio}
-      />
-      <MissingPanel
-        title="Notas no Domínio, ausentes no cliente"
-        emptyLabel="Nenhuma nota faltando no cliente."
-        items={result.missingInClient}
+        items={[
+          ...result.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const })),
+          ...result.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const })),
+        ].sort((a, b) => a.nota.localeCompare(b.nota))}
       />
     </div>
   );
