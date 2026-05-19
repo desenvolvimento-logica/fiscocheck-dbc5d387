@@ -651,10 +651,12 @@ function MissingPanel({
           {classifiedCount > 0 && (
             <Button
               size="sm"
-              variant="outline"
               onClick={() => setMostrarClassificadas((v) => !v)}
+              className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400/90 border border-yellow-500"
             >
-              {mostrarClassificadas ? "Ocultar Classificadas" : "Mostrar Classificadas"}
+              {mostrarClassificadas
+                ? `Ocultar Classificadas (${classifiedCount})`
+                : `Mostrar Classificadas (${classifiedCount})`}
             </Button>
           )}
           {items.length > 0 && (
