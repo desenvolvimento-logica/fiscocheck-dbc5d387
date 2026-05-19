@@ -277,22 +277,30 @@ export function compare(
   const jStat = sumValid(jettax);
   const pStat = sumValid(portal);
 
-  // Combine deduplicating across both files (preservar fornecedor)
+  // Combine: only deduplicate when BOTH client files are provided.
+  // When only one file (Jettax OR Portal) is provided, keep all rows.
+  const bothProvided = jettax.length > 0 && portal.length > 0;
   const combined = new Map<string, MissingRecord>();
+  const combinedList: MissingRecord[] = [];
   let duplicates = 0;
-  for (const r of jettax) {
-    if (!combined.has(r.nota))
-      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
-  }
-  for (const r of portal) {
-    if (combined.has(r.nota)) {
-      duplicates++;
+  const addRow = (r: ParsedRecord) => {
+    const rec = { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor };
+    if (bothProvided) {
+      if (combined.has(r.nota)) {
+        duplicates++;
+      } else {
+        combined.set(r.nota, rec);
+        combinedList.push(rec);
+      }
     } else {
-      combined.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
+      combinedList.push(rec);
+      if (!combined.has(r.nota)) combined.set(r.nota, rec);
     }
-  }
-  let combinedTotal = 0;
-  combined.forEach((v) => (combinedTotal += v.valor));
+  };
+  for (const r of jettax) addRow(r);
+  for (const r of portal) addRow(r);
+  const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
+  const combinedCount = combinedList.length;
 
   const dMap = new Map<string, MissingRecord>();
   for (const r of dominio) {
