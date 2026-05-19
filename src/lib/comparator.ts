@@ -89,7 +89,7 @@ export async function parseExcel(
   return records;
 }
 
-export type DominioRecord = ParsedRecord;
+export type DominioRecord = ParsedRecord & { especie?: string };
 
 // Dominio Excel — colunas fixas
 const DOMINIO_COLS = { nota: "F", especie: "I", fornecedor: "K", valor: "T" } as const;
@@ -124,7 +124,7 @@ export async function parseDominioExcel(
       const valor = parseNumber(row[valorIdx]);
       const fornecedor =
         row[fornIdx] != null ? String(row[fornIdx]).trim() || undefined : undefined;
-      records.push({ nota, valor, fornecedor });
+      records.push({ nota, valor, fornecedor, especie });
     }
   }
   return records;
