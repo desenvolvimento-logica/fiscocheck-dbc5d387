@@ -334,13 +334,15 @@ function CompareStep({
           onChange={setJettax}
           icon={<FileSpreadsheet className="h-5 w-5" />}
         />
-        <FileInput
-          label="Relatório Portal Nacional (Excel)"
-          accept=".xlsx,.xls"
-          file={portal}
-          onChange={setPortal}
-          icon={<FileSpreadsheet className="h-5 w-5" />}
-        />
+        <label className="block rounded-lg border border-dashed bg-muted/30 p-5 opacity-60 cursor-not-allowed">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 text-muted-foreground"><FileSpreadsheet className="h-5 w-5" /></div>
+            <div className="flex-1">
+              <div className="font-medium text-sm">Relatório Portal Nacional (Excel)</div>
+              <div className="mt-1 text-xs text-muted-foreground">Indisponível no momento</div>
+            </div>
+          </div>
+        </label>
         <FileInput
           label="Relatório Domínio (Excel ou PDF)"
           accept=".xlsx,.xls,.pdf"
