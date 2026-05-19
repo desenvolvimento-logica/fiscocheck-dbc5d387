@@ -285,10 +285,13 @@ function CompareStep({
     if (!dominio) return;
     setLoading(true);
     try {
+      const isExcelDom = /\.xlsx?$/i.test(dominio.name);
       const [jRecs, pRecs, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve([]),
         portal ? parseExcel(portal, movement, docType) : Promise.resolve([]),
-        parseDominioPdf(dominio, movement, docType),
+        isExcelDom
+          ? parseDominioExcel(dominio, movement, docType)
+          : parseDominioPdf(dominio, movement, docType),
       ]);
       setResult(compare(jRecs, pRecs, dRecs));
     } catch (e: any) {
