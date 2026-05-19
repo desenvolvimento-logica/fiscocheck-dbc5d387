@@ -466,12 +466,26 @@ function CompareStep({
         </div>
       )}
 
-      {result && <Results result={result} />}
+      {result && (
+        <Results
+          result={result}
+          historicoId={currentHistoricoId}
+          onClassificationsChange={() => setHistoricoVersion((v) => v + 1)}
+        />
+      )}
     </section>
   );
 }
 
-function Results({ result }: { result: CompareResult }) {
+function Results({
+  result,
+  historicoId,
+  onClassificationsChange,
+}: {
+  result: CompareResult;
+  historicoId: string | null;
+  onClassificationsChange: () => void;
+}) {
   const countOk = result.combinedClient.count === result.dominio.count;
   const totalOk = Math.abs(result.diffTotal) < 0.01;
 
