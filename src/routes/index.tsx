@@ -446,36 +446,66 @@ function MissingPanel({
   items: { nota: string; fornecedor?: string; valor: number }[];
 }) {
   const total = items.reduce((s, i) => s + i.valor, 0);
+  const ROW_H = 36;
+  const VISIBLE = 10;
+
+  const exportXlsx = async () => {
+    const XLSX = await import("xlsx");
+    const rows = items.map((it) => ({
+      Nota: it.nota,
+      Fornecedor: it.fornecedor || "",
+      "Valor Contábil": it.valor,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Notas");
+    const safe = title.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+    XLSX.writeFile(wb, `${safe}.xlsx`);
+  };
+
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h3 className="font-semibold">{title}</h3>
-        <div className="text-xs text-muted-foreground">
-          {items.length} {items.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-muted-foreground">
+            {items.length} {items.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
+          </div>
+          {items.length > 0 && (
+            <Button size="sm" variant="outline" onClick={exportXlsx}>
+              <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
+            </Button>
+          )}
         </div>
       </div>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground border-b">
-                <th className="py-2 pr-4 font-medium">Nota</th>
-                <th className="py-2 pr-4 font-medium">Fornecedor</th>
-                <th className="py-2 pr-2 font-medium text-right">Valor Contábil</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="mt-4">
+          <div className="grid grid-cols-[1fr_2fr_1fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
+            <div className="py-2 pr-4 font-medium">Nota</div>
+            <div className="py-2 pr-4 font-medium">Fornecedor</div>
+            <div className="py-2 pr-2 font-medium text-right">Valor Contábil</div>
+          </div>
+          <div
+            className="overflow-y-auto"
+            style={{ maxHeight: items.length > VISIBLE ? ROW_H * VISIBLE : undefined }}
+          >
+            <div className="text-sm">
               {items.map((it, i) => (
-                <tr key={`${it.nota}-${i}`} className="border-b last:border-0">
-                  <td className="py-2 pr-4 font-mono">{it.nota}</td>
-                  <td className="py-2 pr-4">{it.fornecedor || <span className="text-muted-foreground">—</span>}</td>
-                  <td className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</td>
-                </tr>
+                <div
+                  key={`${it.nota}-${i}`}
+                  className="grid grid-cols-[1fr_2fr_1fr] gap-0 border-b last:border-0"
+                >
+                  <div className="py-2 pr-4 font-mono">{it.nota}</div>
+                  <div className="py-2 pr-4">
+                    {it.fornecedor || <span className="text-muted-foreground">—</span>}
+                  </div>
+                  <div className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
     </Card>
