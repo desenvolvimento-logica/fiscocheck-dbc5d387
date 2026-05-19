@@ -286,14 +286,33 @@ function CompareStep({
     setLoading(true);
     try {
       const isExcelDom = /\.xlsx?$/i.test(dominio.name);
-      const [jRecs, pRecs, dRecs] = await Promise.all([
-        jettax ? parseExcel(jettax, movement, docType) : Promise.resolve([]),
-        portal ? parseExcel(portal, movement, docType) : Promise.resolve([]),
+      const [jParsed, pParsed, dRecs] = await Promise.all([
+        jettax ? parseExcel(jettax, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
+        portal ? parseExcel(portal, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
         isExcelDom
           ? parseDominioExcel(dominio, movement, docType)
           : parseDominioPdf(dominio, movement, docType),
       ]);
-      setResult(compare(jRecs, pRecs, dRecs));
+      const res = compare(jParsed.records, pParsed.records, dRecs);
+      setResult(res);
+      const cliente = jParsed.clientName || pParsed.clientName || "Cliente";
+      addHistorico({
+        id: crypto.randomUUID(),
+        cliente,
+        movement,
+        docType,
+        datetime: new Date().toISOString(),
+        diffCount: res.diffCount,
+        diffTotal: res.diffTotal,
+        divergencesCount: res.missingInDominio.length + res.missingInClient.length,
+        classifiedCount: 0,
+        items: [
+          ...res.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const })),
+          ...res.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const })),
+        ],
+        classifications: {},
+      });
+      setHistoricoVersion((v) => v + 1);
     } catch (e: any) {
       console.error(e);
       setError(e?.message ?? "Erro ao processar arquivos");
