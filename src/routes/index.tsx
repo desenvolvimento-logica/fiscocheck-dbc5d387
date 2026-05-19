@@ -441,6 +441,14 @@ function Results({ result }: { result: CompareResult }) {
   );
 }
 
+const CLASSIFICACOES = [
+  "Emissão mês anterior",
+  "Entrada mês seguinte",
+  "Recusada",
+  "Prefeitura Não Vinculada ao Portal",
+  "MEI",
+] as const;
+
 function MissingPanel({
   title,
   emptyLabel,
@@ -454,13 +462,18 @@ function MissingPanel({
   const ROW_H = 36;
   const VISIBLE = 10;
 
+  const [classificacoes, setClassificacoes] = useState<Record<string, string>>({});
+  const keyFor = (it: { nota: string; origem: string }, i: number) =>
+    `${it.nota}-${it.origem}-${i}`;
+
   const exportXlsx = async () => {
     const XLSX = await import("xlsx");
-    const rows = items.map((it) => ({
+    const rows = items.map((it, i) => ({
       Nota: it.nota,
       Fornecedor: it.fornecedor || "",
       "Valor Contábil": it.valor,
       "Diferença no": it.origem,
+      Classificação: classificacoes[keyFor(it, i)] || "",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -488,28 +501,31 @@ function MissingPanel({
         <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
         <div className="mt-4">
-          <div className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
+          <div className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
             <div className="py-2 pr-4 font-medium">Nota</div>
             <div className="py-2 pr-4 font-medium">Fornecedor</div>
             <div className="py-2 pr-2 font-medium text-right">Valor Contábil</div>
-            <div className="py-2 pl-4 font-medium">Diferença no</div>
+            <div className="py-2 px-4 font-medium">Diferença no</div>
+            <div className="py-2 pl-4 font-medium">Classificação</div>
           </div>
           <div
             className="overflow-y-auto"
             style={{ maxHeight: items.length > VISIBLE ? ROW_H * VISIBLE : undefined }}
           >
             <div className="text-sm">
-              {items.map((it, i) => (
+              {items.map((it, i) => {
+                const k = keyFor(it, i);
+                return (
                 <div
-                  key={`${it.nota}-${i}`}
-                  className="grid grid-cols-[1fr_2fr_1fr_1fr] gap-0 border-b last:border-0"
+                  key={k}
+                  className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 border-b last:border-0 items-center"
                 >
                   <div className="py-2 pr-4 font-mono">{it.nota}</div>
                   <div className="py-2 pr-4">
                     {it.fornecedor || <span className="text-muted-foreground">—</span>}
                   </div>
                   <div className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</div>
-                  <div className="py-2 pl-4">
+                  <div className="py-2 px-4">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                         it.origem === "Domínio"
@@ -520,8 +536,25 @@ function MissingPanel({
                       {it.origem}
                     </span>
                   </div>
+                  <div className="py-1 pl-4">
+                    <select
+                      value={classificacoes[k] || ""}
+                      onChange={(e) =>
+                        setClassificacoes((prev) => ({ ...prev, [k]: e.target.value }))
+                      }
+                      className="w-full rounded-md border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                      <option value="">—</option>
+                      {CLASSIFICACOES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
