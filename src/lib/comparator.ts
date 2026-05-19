@@ -285,7 +285,6 @@ export function compare(
 
   // Combine: only deduplicate when BOTH client files are provided.
   // When only one file (Jettax OR Portal) is provided, keep all rows.
-  const bothProvided = jettax.length > 0 && portal.length > 0;
   const combined = new Map<string, MissingRecord>();
   const combinedList: MissingRecord[] = [];
   let duplicates = 0;
