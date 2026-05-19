@@ -54,7 +54,12 @@ function parseNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
-export type ParsedRecord = { nota: string; valor: number; fornecedor?: string };
+export type ParsedRecord = {
+  nota: string;
+  valor: number;
+  fornecedor?: string;
+  cfop?: string;
+};
 
 export async function parseExcel(
   file: File,
@@ -69,6 +74,7 @@ export async function parseExcel(
   const notaIdx = colLetterToIndex(cols.nota);
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
+  const cfopIdx = cols.cfop ? colLetterToIndex(cols.cfop) : -1;
 
   // Para Entrada NFE, considerar apenas a primeira aba (Relatório Detalhado por Nota)
   const sheetNames =
@@ -89,7 +95,11 @@ export async function parseExcel(
       const valor = parseNumber(valorRaw);
       const fornecedor =
         fornIdx >= 0 && row[fornIdx] != null ? String(row[fornIdx]).trim() : undefined;
-      records.push({ nota, valor, fornecedor });
+      const cfop =
+        cfopIdx >= 0 && row[cfopIdx] != null
+          ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
+          : undefined;
+      records.push({ nota, valor, fornecedor, cfop });
     }
   }
   return records;
