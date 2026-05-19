@@ -11,11 +11,11 @@ export type DocType = "NFE" | "CTE" | "NFSe" | "NFCe";
 // Column letters per spec for Jettax (and assumed same for Portal Nacional)
 const COLS: Record<
   string,
-  { nota: string; valor: string; fornecedor?: string; cfop?: string }
+  { nota: string; valor: string; fornecedor?: string; cfop?: string; status?: string }
 > = {
-  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U" },
-  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ" },
-  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F" },
+  "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U", status: "A" },
+  "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ", status: "G" },
+  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F", status: "K" },
   "saida-NFE": { nota: "D", valor: "T", fornecedor: "N", cfop: "U" },
   "saida-NFCe": { nota: "D", valor: "T", cfop: "U" },
   "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
