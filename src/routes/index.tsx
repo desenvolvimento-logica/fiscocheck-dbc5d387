@@ -539,6 +539,8 @@ function Results({
       <MissingPanel
         title="Notas com diferença"
         emptyLabel="Nenhuma divergência encontrada."
+        historicoId={historicoId}
+        onClassificationsChange={onClassificationsChange}
         items={[
           ...result.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const })),
           ...result.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const })),
