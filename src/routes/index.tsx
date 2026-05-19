@@ -13,7 +13,7 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, FileText, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History } from "lucide-react";
 
 type HistoricoItem = {
   nota: string;
