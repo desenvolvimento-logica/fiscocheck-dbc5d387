@@ -75,6 +75,7 @@ export async function parseExcel(
   const valorIdx = colLetterToIndex(cols.valor);
   const fornIdx = cols.fornecedor ? colLetterToIndex(cols.fornecedor) : -1;
   const cfopIdx = cols.cfop ? colLetterToIndex(cols.cfop) : -1;
+  const statusIdx = cols.status ? colLetterToIndex(cols.status) : -1;
 
   // Para Entrada NFE, considerar apenas a primeira aba (Relatório Detalhado por Nota)
   const sheetNames =
@@ -88,6 +89,13 @@ export async function parseExcel(
     });
     for (const row of rows) {
       if (!row) continue;
+      if (statusIdx >= 0 && row[statusIdx] != null) {
+        const status = String(row[statusIdx])
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        if (status.includes("cancelad")) continue;
+      }
       const notaRaw = row[notaIdx];
       const valorRaw = row[valorIdx];
       const nota = normalizeNota(notaRaw);
