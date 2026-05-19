@@ -94,6 +94,7 @@ function Index() {
   const [step, setStep] = useState<Step>("movement");
   const [movement, setMovement] = useState<Movement | null>(null);
   const [docType, setDocType] = useState<DocType | null>(null);
+  const [historicoVersion, setHistoricoVersion] = useState(0);
 
   const reset = () => {
     setStep("movement");
@@ -104,7 +105,7 @@ function Index() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-6 py-5 flex items-center gap-3">
+        <div className="mx-auto max-w-7xl px-6 py-5 flex items-center gap-3">
           <div className="h-9 w-9 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-bold">
             NF
           </div>
@@ -117,37 +118,46 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
-        <Stepper step={step} movement={movement} docType={docType} />
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0">
+            <Stepper step={step} movement={movement} docType={docType} />
 
-        {step === "movement" && (
-          <MovementStep
-            onPick={(m) => {
-              setMovement(m);
-              setStep("doctype");
-            }}
-          />
-        )}
+            {step === "movement" && (
+              <MovementStep
+                onPick={(m) => {
+                  setMovement(m);
+                  setStep("doctype");
+                }}
+              />
+            )}
 
-        {step === "doctype" && movement && (
-          <DocTypeStep
-            movement={movement}
-            onBack={() => setStep("movement")}
-            onPick={(d) => {
-              setDocType(d);
-              setStep("compare");
-            }}
-          />
-        )}
+            {step === "doctype" && movement && (
+              <DocTypeStep
+                movement={movement}
+                onBack={() => setStep("movement")}
+                onPick={(d) => {
+                  setDocType(d);
+                  setStep("compare");
+                }}
+              />
+            )}
 
-        {step === "compare" && movement && docType && (
-          <CompareStep
-            movement={movement}
-            docType={docType}
-            onBack={() => setStep("doctype")}
-            onReset={reset}
-          />
-        )}
+            {step === "compare" && movement && docType && (
+              <CompareStep
+                movement={movement}
+                docType={docType}
+                onBack={() => setStep("doctype")}
+                onReset={reset}
+                setHistoricoVersion={setHistoricoVersion}
+              />
+            )}
+          </div>
+
+          <aside className="lg:sticky lg:top-6 lg:self-start">
+            <HistoricoPanel version={historicoVersion} onChange={() => setHistoricoVersion((v) => v + 1)} />
+          </aside>
+        </div>
       </main>
     </div>
   );
