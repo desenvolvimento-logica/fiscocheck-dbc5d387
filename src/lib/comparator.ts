@@ -389,9 +389,9 @@ export function compare(
   const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
   const combinedCount = combinedList.length;
 
-  // Dedup do Domínio: nota + espécie + fornecedor
+  // Dedup do Domínio: nota + espécie + fornecedor + cfop + valor
   const dominioKey = (r: DominioRecord) =>
-    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}`;
+    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
   const dMap = new Map<string, MissingRecord>();
   const dominioNotas = new Set<string>();
   for (const r of dominio) {
