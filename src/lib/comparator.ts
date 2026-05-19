@@ -257,6 +257,7 @@ export type CompareResult = {
   diffTotal: number;
   missingInDominio: MissingRecord[]; // no cliente, ausentes no Domínio
   missingInClient: MissingRecord[]; // no Domínio, ausentes no cliente
+  divergences: MissingRecord[]; // união das notas que diferem entre cliente e Domínio
 };
 
 export function compare(
