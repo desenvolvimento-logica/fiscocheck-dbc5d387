@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -13,7 +13,66 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, FileText, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, FileText, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History } from "lucide-react";
+
+type HistoricoItem = {
+  nota: string;
+  fornecedor?: string;
+  valor: number;
+  origem: "Domínio" | "Cliente";
+};
+
+type HistoricoEntry = {
+  id: string;
+  cliente: string;
+  movement: Movement;
+  docType: DocType;
+  datetime: string;
+  diffCount: number;
+  diffTotal: number;
+  divergencesCount: number;
+  classifiedCount: number;
+  items: HistoricoItem[];
+  classifications: Record<string, string>;
+};
+
+const HISTORICO_KEY = "fc_historico_v1";
+
+function loadHistorico(): HistoricoEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(HISTORICO_KEY);
+    return raw ? (JSON.parse(raw) as HistoricoEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistorico(entries: HistoricoEntry[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(HISTORICO_KEY, JSON.stringify(entries));
+}
+
+function addHistorico(entry: HistoricoEntry) {
+  const list = loadHistorico();
+  list.unshift(entry);
+  saveHistorico(list.slice(0, 50));
+}
+
+function updateHistoricoClassifications(id: string, classifications: Record<string, string>) {
+  const list = loadHistorico();
+  const idx = list.findIndex((e) => e.id === id);
+  if (idx >= 0) {
+    list[idx].classifications = classifications;
+    list[idx].classifiedCount = Object.values(classifications).filter(Boolean).length;
+    saveHistorico(list);
+  }
+}
+
+function removeHistorico(id: string) {
+  saveHistorico(loadHistorico().filter((e) => e.id !== id));
+}
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
