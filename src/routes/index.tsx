@@ -860,11 +860,6 @@ function HistoricoPanel({ version, onChange }: { version: number; onChange: () =
     </Card>
   );
 }
-        </div>
-      )}
-    </Card>
-  );
-}
 
 function SummaryCard({
   title,
