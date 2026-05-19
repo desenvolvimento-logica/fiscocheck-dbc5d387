@@ -368,8 +368,9 @@ function CompareStep({
       const res = compare(jParsed.records, pParsed.records, dRecs);
       setResult(res);
       const cliente = jParsed.clientName || pParsed.clientName || "Cliente";
+      const id = crypto.randomUUID();
       addHistorico({
-        id: crypto.randomUUID(),
+        id,
         cliente,
         movement,
         docType,
@@ -384,6 +385,7 @@ function CompareStep({
         ],
         classifications: {},
       });
+      setCurrentHistoricoId(id);
       setHistoricoVersion((v) => v + 1);
     } catch (e: any) {
       console.error(e);
