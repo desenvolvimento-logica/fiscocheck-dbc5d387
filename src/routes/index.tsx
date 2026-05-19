@@ -331,12 +331,15 @@ function CompareStep({
   docType,
   onBack,
   onReset,
+  setHistoricoVersion,
 }: {
   movement: Movement;
   docType: DocType;
   onBack: () => void;
   onReset: () => void;
+  setHistoricoVersion: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const [currentHistoricoId, setCurrentHistoricoId] = useState<string | null>(null);
   const [jettax, setJettax] = useState<File | null>(null);
   const [portal, setPortal] = useState<File | null>(null);
   const [dominio, setDominio] = useState<File | null>(null);
