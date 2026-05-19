@@ -299,12 +299,19 @@ export type CompareResult = {
   divergences: MissingRecord[]; // união das notas que diferem entre cliente e Domínio
 };
 
+const normFornec = (s?: string) =>
+  (s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+
 export function compare(
   jettax: ParsedRecord[],
   portal: ParsedRecord[],
   dominio: DominioRecord[],
 ): CompareResult {
   const bothProvided = jettax.length > 0 && portal.length > 0;
+  // Chave de duplicidade do cliente: nota + fornecedor
+  // (espécie é implícita pelo tipo de documento selecionado)
+  const clientKey = (r: ParsedRecord) => `${r.nota}|${normFornec(r.fornecedor)}`;
+
   const sumStat = (arr: ParsedRecord[]) => {
     if (!bothProvided) {
       let total = 0;
@@ -313,7 +320,8 @@ export function compare(
     }
     const map = new Map<string, number>();
     for (const r of arr) {
-      if (!map.has(r.nota)) map.set(r.nota, r.valor);
+      const k = clientKey(r);
+      if (!map.has(k)) map.set(k, r.valor);
     }
     let total = 0;
     map.forEach((v) => (total += v));
@@ -323,23 +331,27 @@ export function compare(
   const jStat = sumStat(jettax);
   const pStat = sumStat(portal);
 
-  // Combine: only deduplicate when BOTH client files are provided.
-  // When only one file (Jettax OR Portal) is provided, keep all rows.
+  // Combina Jettax + Portal. Dedup só quando ambos fornecidos,
+  // e considera duplicata apenas se nota + fornecedor coincidirem.
   const combined = new Map<string, MissingRecord>();
   const combinedList: MissingRecord[] = [];
+  const combinedNotas = new Set<string>();
   let duplicates = 0;
   const addRow = (r: ParsedRecord) => {
     const rec = { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor };
+    const k = clientKey(r);
     if (bothProvided) {
-      if (combined.has(r.nota)) {
+      if (combined.has(k)) {
         duplicates++;
       } else {
-        combined.set(r.nota, rec);
+        combined.set(k, rec);
         combinedList.push(rec);
+        combinedNotas.add(r.nota);
       }
     } else {
       combinedList.push(rec);
-      if (!combined.has(r.nota)) combined.set(r.nota, rec);
+      combinedNotas.add(r.nota);
+      if (!combined.has(k)) combined.set(k, rec);
     }
   };
   for (const r of jettax) addRow(r);
@@ -347,25 +359,36 @@ export function compare(
   const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
   const combinedCount = combinedList.length;
 
+  // Dedup do Domínio: nota + espécie + fornecedor
+  const dominioKey = (r: DominioRecord) =>
+    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}`;
   const dMap = new Map<string, MissingRecord>();
+  const dominioNotas = new Set<string>();
   for (const r of dominio) {
-    if (!dMap.has(r.nota))
-      dMap.set(r.nota, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
+    const k = dominioKey(r);
+    if (!dMap.has(k)) {
+      dMap.set(k, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
+      dominioNotas.add(r.nota);
+    }
   }
   let dTotal = 0;
-  for (const r of dominio) dTotal += r.valor;
+  dMap.forEach((v) => (dTotal += v.valor));
 
   const missingInDominio: MissingRecord[] = [];
   const seenMissing = new Set<string>();
   for (const rec of combinedList) {
-    if (!dMap.has(rec.nota) && !seenMissing.has(rec.nota)) {
+    if (!dominioNotas.has(rec.nota) && !seenMissing.has(rec.nota)) {
       seenMissing.add(rec.nota);
       missingInDominio.push(rec);
     }
   }
   const missingInClient: MissingRecord[] = [];
-  dMap.forEach((rec, nota) => {
-    if (!combined.has(nota)) missingInClient.push(rec);
+  const seenMissingClient = new Set<string>();
+  dMap.forEach((rec) => {
+    if (!combinedNotas.has(rec.nota) && !seenMissingClient.has(rec.nota)) {
+      seenMissingClient.add(rec.nota);
+      missingInClient.push(rec);
+    }
   });
 
   const byNota = (a: MissingRecord, b: MissingRecord) => a.nota.localeCompare(b.nota);
