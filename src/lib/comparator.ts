@@ -257,6 +257,7 @@ export type CompareResult = {
   diffTotal: number;
   missingInDominio: MissingRecord[]; // no cliente, ausentes no Domínio
   missingInClient: MissingRecord[]; // no Domínio, ausentes no cliente
+  divergences: MissingRecord[]; // união das notas que diferem entre cliente e Domínio
 };
 
 export function compare(
@@ -332,6 +333,8 @@ export function compare(
   missingInDominio.sort(byNota);
   missingInClient.sort(byNota);
 
+  const divergences: MissingRecord[] = [...missingInDominio, ...missingInClient].sort(byNota);
+
   return {
     jettax: jStat,
     portal: pStat,
@@ -345,6 +348,7 @@ export function compare(
     diffTotal: combinedTotal - dTotal,
     missingInDominio,
     missingInClient,
+    divergences,
   };
 }
 

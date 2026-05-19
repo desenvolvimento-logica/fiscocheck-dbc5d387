@@ -423,6 +423,11 @@ function Results({ result }: { result: CompareResult }) {
       </Card>
 
       <MissingPanel
+        title="Notas que deram diferença"
+        emptyLabel="Nenhuma divergência encontrada."
+        items={result.divergences}
+      />
+      <MissingPanel
         title="Notas no cliente, ausentes no Domínio"
         emptyLabel="Nenhuma nota faltando no Domínio."
         items={result.missingInDominio}
