@@ -562,23 +562,37 @@ function MissingPanel({
   title,
   emptyLabel,
   items,
+  historicoId,
+  onClassificationsChange,
 }: {
   title: string;
   emptyLabel: string;
   items: { nota: string; fornecedor?: string; valor: number; origem: "Domínio" | "Cliente" }[];
+  historicoId: string | null;
+  onClassificationsChange: () => void;
 }) {
   const ROW_H = 36;
   const VISIBLE = 10;
 
   const [classificacoes, setClassificacoes] = useState<Record<string, string>>({});
   const [salvas, setSalvas] = useState<Record<string, string>>({});
+  const [mostrarClassificadas, setMostrarClassificadas] = useState(false);
   const keyFor = (it: { nota: string; origem: string }, i: number) =>
     `${it.nota}-${it.origem}-${i}`;
 
-  const visibleItems = items
-    .map((it, i) => ({ it, i, k: keyFor(it, i) }))
-    .filter(({ k }) => !salvas[k]);
+  const allItems = items.map((it, i) => ({ it, i, k: keyFor(it, i) }));
+  const visibleItems = mostrarClassificadas
+    ? allItems
+    : allItems.filter(({ k }) => !salvas[k]);
   const total = visibleItems.reduce((s, { it }) => s + it.valor, 0);
+  const classifiedCount = Object.keys(salvas).length;
+
+  const persist = (nextSalvas: Record<string, string>) => {
+    if (historicoId) {
+      updateHistoricoClassifications(historicoId, nextSalvas);
+      onClassificationsChange();
+    }
+  };
 
   const salvar = () => {
     setSalvas((prev) => {
@@ -586,9 +600,20 @@ function MissingPanel({
       for (const [k, v] of Object.entries(classificacoes)) {
         if (v) next[k] = v;
       }
+      persist(next);
       return next;
     });
     setClassificacoes({});
+  };
+
+  const alterarClassificada = (k: string, value: string) => {
+    setSalvas((prev) => {
+      const next = { ...prev };
+      if (value) next[k] = value;
+      else delete next[k];
+      persist(next);
+      return next;
+    });
   };
 
   const pendentesParaSalvar = Object.values(classificacoes).filter(Boolean).length;
@@ -616,13 +641,22 @@ function MissingPanel({
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h3 className="font-semibold">{title}</h3>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="text-xs text-muted-foreground">
             {visibleItems.length} {visibleItems.length === 1 ? "nota" : "notas"} · {fmtMoney(total)}
-            {Object.keys(salvas).length > 0 && (
-              <span className="ml-1">({Object.keys(salvas).length} ocultas)</span>
+            {classifiedCount > 0 && !mostrarClassificadas && (
+              <span className="ml-1">({classifiedCount} classificadas)</span>
             )}
           </div>
+          {classifiedCount > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setMostrarClassificadas((v) => !v)}
+            >
+              {mostrarClassificadas ? "Ocultar Classificadas" : "Mostrar Classificadas"}
+            </Button>
+          )}
           {items.length > 0 && (
             <Button size="sm" variant="outline" onClick={exportXlsx}>
               <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
@@ -648,45 +682,54 @@ function MissingPanel({
             style={{ maxHeight: visibleItems.length > VISIBLE ? ROW_H * VISIBLE : undefined }}
           >
             <div className="text-sm">
-              {visibleItems.map(({ it, k }) => (
-                <div
-                  key={k}
-                  className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 border-b last:border-0 items-center"
-                >
-                  <div className="py-2 pr-4 font-mono">{it.nota}</div>
-                  <div className="py-2 pr-4">
-                    {it.fornecedor || <span className="text-muted-foreground">—</span>}
+              {visibleItems.map(({ it, k }) => {
+                const isSalva = !!salvas[k];
+                return (
+                  <div
+                    key={k}
+                    className={`grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 border-b last:border-0 items-center ${
+                      isSalva ? "bg-muted/40" : ""
+                    }`}
+                  >
+                    <div className="py-2 pr-4 font-mono">{it.nota}</div>
+                    <div className="py-2 pr-4">
+                      {it.fornecedor || <span className="text-muted-foreground">—</span>}
+                    </div>
+                    <div className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</div>
+                    <div className="py-2 px-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          it.origem === "Domínio"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-accent/20 text-accent-foreground"
+                        }`}
+                      >
+                        {it.origem}
+                      </span>
+                    </div>
+                    <div className="py-1 pl-4">
+                      <select
+                        value={isSalva ? salvas[k] : classificacoes[k] || ""}
+                        onChange={(e) => {
+                          if (isSalva) {
+                            alterarClassificada(k, e.target.value);
+                          } else {
+                            setClassificacoes((prev) => ({ ...prev, [k]: e.target.value }));
+                          }
+                        }}
+                        className="w-full rounded-md border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+                      >
+                        <option value="">—</option>
+                        {CLASSIFICACOES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="py-2 pr-2 text-right font-medium">{fmtMoney(it.valor)}</div>
-                  <div className="py-2 px-4">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        it.origem === "Domínio"
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-accent/20 text-accent-foreground"
-                      }`}
-                    >
-                      {it.origem}
-                    </span>
-                  </div>
-                  <div className="py-1 pl-4">
-                    <select
-                      value={classificacoes[k] || ""}
-                      onChange={(e) =>
-                        setClassificacoes((prev) => ({ ...prev, [k]: e.target.value }))
-                      }
-                      className="w-full rounded-md border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-                    >
-                      <option value="">—</option>
-                      {CLASSIFICACOES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="mt-4 flex justify-end">
@@ -700,6 +743,123 @@ function MissingPanel({
               {pendentesParaSalvar > 0 && ` (${pendentesParaSalvar})`}
             </Button>
           </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function HistoricoPanel({ version, onChange }: { version: number; onChange: () => void }) {
+  const [entries, setEntries] = useState<HistoricoEntry[]>([]);
+
+  useEffect(() => {
+    setEntries(loadHistorico());
+  }, [version]);
+
+  const baixar = async (entry: HistoricoEntry) => {
+    const XLSX = await import("xlsx");
+    const rows = entry.items.map((it, i) => {
+      const k = `${it.nota}-${it.origem}-${i}`;
+      return {
+        Nota: it.nota,
+        Fornecedor: it.fornecedor || "",
+        "Valor Contábil": it.valor,
+        "Diferença no": it.origem,
+        Classificação: entry.classifications[k] || "",
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Notas");
+    const safeCli = entry.cliente.replace(/[^a-z0-9]+/gi, "_").toLowerCase().slice(0, 40);
+    const dt = entry.datetime.replace(/[:.]/g, "-").slice(0, 19);
+    XLSX.writeFile(wb, `notas_diferenca_${safeCli}_${dt}.xlsx`);
+  };
+
+  const remover = (id: string) => {
+    removeHistorico(id);
+    onChange();
+  };
+
+  const fmtDate = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <History className="h-4 w-4 text-muted-foreground" />
+        <h3 className="font-semibold text-sm">Histórico de comparações</h3>
+      </div>
+      {entries.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          Nenhuma comparação realizada ainda.
+        </p>
+      ) : (
+        <div className="space-y-2 max-h-[calc(100vh-180px)] overflow-y-auto pr-1">
+          {entries.map((e) => (
+            <div
+              key={e.id}
+              className="rounded-md border bg-card p-3 text-xs space-y-1.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-semibold text-sm leading-tight truncate" title={e.cliente}>
+                  {e.cliente}
+                </div>
+                <button
+                  onClick={() => remover(e.id)}
+                  className="text-muted-foreground hover:text-destructive shrink-0"
+                  title="Remover"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {e.movement === "entrada" ? "Entrada" : "Saída"} · {e.docType} · {fmtDate(e.datetime)}
+              </div>
+              <div className="grid grid-cols-2 gap-1 pt-1">
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Divergentes</div>
+                  <div className="font-semibold">{e.divergencesCount}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Classificadas</div>
+                  <div className="font-semibold">{e.classifiedCount}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-[10px] uppercase text-muted-foreground">Dif. Valor Contábil</div>
+                  <div className={`font-semibold ${Math.abs(e.diffTotal) < 0.01 ? "" : "text-destructive"}`}>
+                    {fmtMoney(e.diffTotal)}
+                  </div>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full mt-2 h-7 text-xs"
+                onClick={() => baixar(e)}
+                disabled={e.items.length === 0}
+              >
+                <Download className="mr-1 h-3 w-3" /> Baixar relatório
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
         </div>
       )}
     </Card>
