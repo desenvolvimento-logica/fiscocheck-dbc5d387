@@ -337,10 +337,10 @@ export function compare(
   const bothProvided = jettax.length > 0 && portal.length > 0;
   // Chave de duplicidade do cliente: nota + fornecedor
   // (espécie é implícita pelo tipo de documento selecionado)
-  // Chave de duplicidade do cliente: nota + fornecedor + cfop + valor
+  // Chave de duplicidade do cliente: nota + fornecedor + valor
   // (espécie é implícita pelo tipo de documento selecionado)
   const clientKey = (r: ParsedRecord) =>
-    `${r.nota}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
+    `${r.nota}|${normFornec(r.fornecedor)}|${r.valor.toFixed(2)}`;
 
   const sumStat = (arr: ParsedRecord[]) => {
     if (!bothProvided) {
@@ -389,9 +389,9 @@ export function compare(
   const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
   const combinedCount = combinedList.length;
 
-  // Dedup do Domínio: nota + espécie + fornecedor + cfop + valor
+  // Dedup do Domínio: nota + espécie + fornecedor + valor
   const dominioKey = (r: DominioRecord) =>
-    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}|${r.cfop ?? ""}|${r.valor.toFixed(2)}`;
+    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}|${r.valor.toFixed(2)}`;
   const dMap = new Map<string, MissingRecord>();
   const dominioNotas = new Set<string>();
   for (const r of dominio) {
