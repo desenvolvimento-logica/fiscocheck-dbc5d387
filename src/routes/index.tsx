@@ -568,13 +568,16 @@ function MissingPanel({
   items,
   historicoId,
   onClassificationsChange,
+  movement,
 }: {
   title: string;
   emptyLabel: string;
   items: { nota: string; fornecedor?: string; valor: number; origem: "Domínio" | "Cliente" }[];
   historicoId: string | null;
   onClassificationsChange: () => void;
+  movement: Movement;
 }) {
+  const fornecedorLabel = movement === "saida" ? "Cliente" : "Fornecedor";
   const ROW_H = 36;
   const VISIBLE = 10;
 
