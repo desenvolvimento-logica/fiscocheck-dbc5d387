@@ -470,6 +470,7 @@ function CompareStep({
         <Results
           result={result}
           historicoId={currentHistoricoId}
+          movement={movement}
           onClassificationsChange={() => setHistoricoVersion((v) => v + 1)}
         />
       )}
@@ -480,10 +481,12 @@ function CompareStep({
 function Results({
   result,
   historicoId,
+  movement,
   onClassificationsChange,
 }: {
   result: CompareResult;
   historicoId: string | null;
+  movement: Movement;
   onClassificationsChange: () => void;
 }) {
   const countOk = result.combinedClient.count === result.dominio.count;
