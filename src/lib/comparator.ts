@@ -146,7 +146,7 @@ const DOMINIO_COLS_DEFAULT: DominioColsCfg = {
   valor: "T",
 };
 const DOMINIO_COLS_BY_KEY: Record<string, DominioColsCfg> = {
-  "saida-NFE": { nota: "E", fornecedor: "M", valor: "U" },
+  "saida-NFE": { nota: "E", fornecedor: "M", valor: "U", especie: "I" },
 };
 function getDominioCols(mov: Movement, doc: DocType): DominioColsCfg {
   return DOMINIO_COLS_BY_KEY[`${mov}-${doc}`] ?? DOMINIO_COLS_DEFAULT;
