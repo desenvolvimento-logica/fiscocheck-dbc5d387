@@ -470,6 +470,7 @@ function CompareStep({
         <Results
           result={result}
           historicoId={currentHistoricoId}
+          movement={movement}
           onClassificationsChange={() => setHistoricoVersion((v) => v + 1)}
         />
       )}
@@ -480,10 +481,12 @@ function CompareStep({
 function Results({
   result,
   historicoId,
+  movement,
   onClassificationsChange,
 }: {
   result: CompareResult;
   historicoId: string | null;
+  movement: Movement;
   onClassificationsChange: () => void;
 }) {
   const countOk = result.combinedClient.count === result.dominio.count;
@@ -541,6 +544,7 @@ function Results({
         emptyLabel="Nenhuma divergência encontrada."
         historicoId={historicoId}
         onClassificationsChange={onClassificationsChange}
+        movement={movement}
         items={[
           ...result.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const })),
           ...result.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const })),
@@ -564,13 +568,16 @@ function MissingPanel({
   items,
   historicoId,
   onClassificationsChange,
+  movement,
 }: {
   title: string;
   emptyLabel: string;
   items: { nota: string; fornecedor?: string; valor: number; origem: "Domínio" | "Cliente" }[];
   historicoId: string | null;
   onClassificationsChange: () => void;
+  movement: Movement;
 }) {
+  const fornecedorLabel = movement === "saida" ? "Cliente" : "Fornecedor";
   const ROW_H = 36;
   const VISIBLE = 10;
 
@@ -624,7 +631,7 @@ function MissingPanel({
       const k = keyFor(it, i);
       return {
         Nota: it.nota,
-        Fornecedor: it.fornecedor || "",
+        [fornecedorLabel]: it.fornecedor || "",
         "Valor Contábil": it.valor,
         "Diferença no": it.origem,
         Classificação: salvas[k] || classificacoes[k] || "",
@@ -674,7 +681,7 @@ function MissingPanel({
         <div className="mt-4">
           <div className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
             <div className="py-2 pr-4 font-medium">Nota</div>
-            <div className="py-2 pr-4 font-medium">Fornecedor</div>
+            <div className="py-2 pr-4 font-medium">{fornecedorLabel}</div>
             <div className="py-2 pr-2 font-medium text-right">Valor Contábil</div>
             <div className="py-2 px-4 font-medium">Diferença no</div>
             <div className="py-2 pl-4 font-medium">Classificação</div>
