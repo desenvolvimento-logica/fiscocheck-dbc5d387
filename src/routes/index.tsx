@@ -681,7 +681,7 @@ function MissingPanel({
         <div className="mt-4">
           <div className="grid grid-cols-[1fr_2fr_1fr_1fr_1.5fr] gap-0 text-xs uppercase tracking-wide text-muted-foreground border-b">
             <div className="py-2 pr-4 font-medium">Nota</div>
-            <div className="py-2 pr-4 font-medium">Fornecedor</div>
+            <div className="py-2 pr-4 font-medium">{fornecedorLabel}</div>
             <div className="py-2 pr-2 font-medium text-right">Valor Contábil</div>
             <div className="py-2 px-4 font-medium">Diferença no</div>
             <div className="py-2 pl-4 font-medium">Classificação</div>
