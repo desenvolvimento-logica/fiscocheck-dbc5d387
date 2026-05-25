@@ -131,28 +131,43 @@ export async function parseExcel(
 
 export type DominioRecord = ParsedRecord & { especie?: string };
 
-// Dominio Excel — colunas fixas
-const DOMINIO_COLS = {
+// Dominio Excel — colunas por movimento/documento
+type DominioColsCfg = {
+  nota: string;
+  valor: string;
+  fornecedor: string;
+  especie?: string;
+  cfop?: string;
+};
+const DOMINIO_COLS_DEFAULT: DominioColsCfg = {
   nota: "F",
   especie: "I",
   fornecedor: "K",
   cfop: "N",
   valor: "T",
-} as const;
+};
+const DOMINIO_COLS_BY_KEY: Record<string, DominioColsCfg> = {
+  "saida-NFE": { nota: "E", fornecedor: "M", valor: "U" },
+};
+function getDominioCols(mov: Movement, doc: DocType): DominioColsCfg {
+  return DOMINIO_COLS_BY_KEY[`${mov}-${doc}`] ?? DOMINIO_COLS_DEFAULT;
+}
 
 export async function parseDominioExcel(
   file: File,
   mov: Movement,
   doc: DocType,
 ): Promise<DominioRecord[]> {
-  const allowed = new Set(getEspecieCodes(mov, doc));
+  const cfg = getDominioCols(mov, doc);
+  const hasEspecieCol = !!cfg.especie;
+  const allowed = new Set(hasEspecieCol ? getEspecieCodes(mov, doc) : []);
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
-  const notaIdx = colLetterToIndex(DOMINIO_COLS.nota);
-  const espIdx = colLetterToIndex(DOMINIO_COLS.especie);
-  const fornIdx = colLetterToIndex(DOMINIO_COLS.fornecedor);
-  const cfopIdx = colLetterToIndex(DOMINIO_COLS.cfop);
-  const valorIdx = colLetterToIndex(DOMINIO_COLS.valor);
+  const notaIdx = colLetterToIndex(cfg.nota);
+  const espIdx = cfg.especie ? colLetterToIndex(cfg.especie) : -1;
+  const fornIdx = colLetterToIndex(cfg.fornecedor);
+  const cfopIdx = cfg.cfop ? colLetterToIndex(cfg.cfop) : -1;
+  const valorIdx = colLetterToIndex(cfg.valor);
   const records: DominioRecord[] = [];
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
