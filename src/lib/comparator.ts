@@ -179,15 +179,19 @@ export async function parseDominioExcel(
     for (const row of rows) {
       if (!row) continue;
       const especie =
-        row[espIdx] != null ? String(row[espIdx]).trim().replace(/\D+/g, "") : "";
+        espIdx >= 0 && row[espIdx] != null
+          ? String(row[espIdx]).trim().replace(/\D+/g, "")
+          : "";
       if (allowed.size > 0 && !allowed.has(especie)) continue;
       const nota = normalizeNota(row[notaIdx]);
       if (!nota) continue;
       const valor = parseNumber(row[valorIdx]);
       const fornecedor =
-        row[fornIdx] != null ? String(row[fornIdx]).trim() || undefined : undefined;
+        fornIdx >= 0 && row[fornIdx] != null
+          ? String(row[fornIdx]).trim() || undefined
+          : undefined;
       const cfop =
-        row[cfopIdx] != null
+        cfopIdx >= 0 && row[cfopIdx] != null
           ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
           : undefined;
       records.push({ nota, valor, fornecedor, especie, cfop });
