@@ -519,6 +519,49 @@ function Results({
       </Card>
 
 
+      <Card className="p-5">
+        <h3 className="font-semibold">Notas ausentes (comparação por número)</h3>
+        <p className="text-xs text-muted-foreground mt-1">
+          Notas presentes em uma origem e ausentes na outra, considerando apenas o número da nota.
+        </p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <div>
+            <div className="text-sm font-medium mb-2">
+              No Domínio, ausentes no Cliente{" "}
+              <span className="text-muted-foreground">({result.missingInClient.length})</span>
+            </div>
+            <div className="max-h-64 overflow-auto rounded border bg-muted/30 p-2 text-sm font-mono">
+              {result.missingInClient.length === 0 ? (
+                <div className="text-muted-foreground p-2">Nenhuma.</div>
+              ) : (
+                result.missingInClient.map((r) => (
+                  <div key={`d-${r.nota}`} className="px-1 py-0.5">
+                    {r.nota}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-medium mb-2">
+              No Cliente, ausentes no Domínio{" "}
+              <span className="text-muted-foreground">({result.missingInDominio.length})</span>
+            </div>
+            <div className="max-h-64 overflow-auto rounded border bg-muted/30 p-2 text-sm font-mono">
+              {result.missingInDominio.length === 0 ? (
+                <div className="text-muted-foreground p-2">Nenhuma.</div>
+              ) : (
+                result.missingInDominio.map((r) => (
+                  <div key={`c-${r.nota}`} className="px-1 py-0.5">
+                    {r.nota}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+
 
       <MissingPanel
         title="Notas com diferença"
