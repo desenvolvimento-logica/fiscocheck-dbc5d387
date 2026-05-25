@@ -518,25 +518,6 @@ function Results({
         </div>
       </Card>
 
-      <Card className="p-5">
-        <h3 className="font-semibold">Comparação com Domínio</h3>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <ResultRow
-            ok={countOk}
-            label="Quantidade de Notas"
-            client={String(result.combinedClient.count)}
-            dominio={String(result.dominio.count)}
-            diff={String(result.diffCount)}
-          />
-          <ResultRow
-            ok={totalOk}
-            label="Valor Contábil"
-            client={fmtMoney(result.combinedClient.total)}
-            dominio={fmtMoney(result.dominio.total)}
-            diff={fmtMoney(result.diffTotal)}
-          />
-        </div>
-      </Card>
 
 
       <MissingPanel
