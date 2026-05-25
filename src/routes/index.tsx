@@ -541,6 +541,7 @@ function Results({
         emptyLabel="Nenhuma divergência encontrada."
         historicoId={historicoId}
         onClassificationsChange={onClassificationsChange}
+        movement={movement}
         items={[
           ...result.missingInDominio.map((r) => ({ ...r, origem: "Domínio" as const })),
           ...result.missingInClient.map((r) => ({ ...r, origem: "Cliente" as const })),
