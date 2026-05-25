@@ -631,7 +631,7 @@ function MissingPanel({
       const k = keyFor(it, i);
       return {
         Nota: it.nota,
-        Fornecedor: it.fornecedor || "",
+        [fornecedorLabel]: it.fornecedor || "",
         "Valor Contábil": it.valor,
         "Diferença no": it.origem,
         Classificação: salvas[k] || classificacoes[k] || "",
