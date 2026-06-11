@@ -584,6 +584,7 @@ const CLASSIFICACOES = [
   "Recusada",
   "Prefeitura Não Vinculada ao Portal",
   "MEI",
+  "Notas de Entrada Própria",
 ] as const;
 
 function MissingPanel({
