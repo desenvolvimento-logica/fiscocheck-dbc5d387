@@ -42,7 +42,7 @@ function AdminLink() {
   );
 }
 
-function TeamHistoryLink() {
+function TeamLinks() {
   const { data: canSeeTeam } = useQuery({
     queryKey: ["can-see-team"],
     queryFn: async () => {
@@ -58,14 +58,23 @@ function TeamHistoryLink() {
   });
   if (!canSeeTeam) return null;
   return (
-    <Link to="/team-history">
-      <Button variant="secondary" size="sm">
-        <History className="h-4 w-4" />
-        Equipe
-      </Button>
-    </Link>
+    <>
+      <Link to="/dashboard">
+        <Button variant="secondary" size="sm">
+          <BarChart3 className="h-4 w-4" />
+          Dashboard
+        </Button>
+      </Link>
+      <Link to="/team-history">
+        <Button variant="secondary" size="sm">
+          <History className="h-4 w-4" />
+          Equipe
+        </Button>
+      </Link>
+    </>
   );
 }
+
 
 
 function SignOutButton() {
