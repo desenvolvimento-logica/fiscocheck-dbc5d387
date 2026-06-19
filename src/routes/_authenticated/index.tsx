@@ -13,7 +13,26 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "@tanstack/react-router";
+
+function SignOutButton() {
+  const navigate = useNavigate();
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={async () => {
+        await supabase.auth.signOut();
+        navigate({ to: "/auth", replace: true });
+      }}
+    >
+      <LogOut className="h-4 w-4" />
+      Sair
+    </Button>
+  );
+}
 
 type HistoricoItem = {
   nota: string;
@@ -74,7 +93,7 @@ function removeHistorico(id: string) {
 }
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Comparador de Notas Fiscais — NFE / NFCe / NFSe / CTE" },
@@ -109,12 +128,13 @@ function Index() {
           <div className="h-9 w-9 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-bold">
             NF
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-semibold leading-tight">
               Comparador de Notas Fiscais
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
+          <SignOutButton />
         </div>
       </header>
 
