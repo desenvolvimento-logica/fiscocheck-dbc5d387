@@ -109,12 +109,13 @@ function Index() {
           <div className="h-9 w-9 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-bold">
             NF
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-semibold leading-tight">
               Comparador de Notas Fiscais
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
+          <SignOutButton />
         </div>
       </header>
 
