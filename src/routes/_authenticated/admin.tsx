@@ -413,12 +413,31 @@ function AdminPage() {
                 type="text"
                 value={resetPwVal}
                 onChange={(e) => setResetPwVal(e.target.value)}
-                required
+                placeholder="Digite uma senha ou use a padrão"
               />
               <p className="text-xs text-muted-foreground">{passwordRulesText()}</p>
             </div>
-            <DialogFooter>
-              <Button type="submit" disabled={resetMut.isPending}>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={resetMut.isPending}
+                onClick={() => {
+                  if (!resetFor) return;
+                  resetMut.mutate(
+                    { user_id: resetFor.id, password: "Logica@2026" },
+                    {
+                      onSuccess: () => {
+                        setResetFor(null);
+                        setResetPwVal("");
+                      },
+                    },
+                  );
+                }}
+              >
+                Usar senha padrão
+              </Button>
+              <Button type="submit" disabled={resetMut.isPending || !resetPwVal}>
                 {resetMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Redefinir
               </Button>
@@ -426,6 +445,7 @@ function AdminPage() {
           </form>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
