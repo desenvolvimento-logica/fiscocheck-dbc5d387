@@ -13,9 +13,34 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+
+function AdminLink() {
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      return !!data;
+    },
+  });
+  if (!isAdmin) return null;
+  return (
+    <Link to="/admin">
+      <Button variant="secondary" size="sm">
+        <Shield className="h-4 w-4" />
+        Admin
+      </Button>
+    </Link>
+  );
+}
 
 function SignOutButton() {
   const navigate = useNavigate();
@@ -134,6 +159,7 @@ function Index() {
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
+          <AdminLink />
           <SignOutButton />
         </div>
       </header>
