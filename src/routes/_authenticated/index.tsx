@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+export const Route = createFileRoute("/_authenticated/")({ component: Index });
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
