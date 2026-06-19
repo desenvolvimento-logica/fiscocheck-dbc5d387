@@ -148,13 +148,19 @@ function AdminPage() {
   });
 
   const resetMut = useMutation({
-    mutationFn: (v: { user_id: string; password: string }) => resetPw({ data: v }),
-    onSuccess: () => {
-      toast.success("Senha redefinida. O usuário precisará alterá-la no próximo acesso.");
+    mutationFn: (v: { user_id: string; password: string; must_change_password?: boolean }) =>
+      resetPw({ data: v }),
+    onSuccess: (_d, v) => {
+      toast.success(
+        v.must_change_password
+          ? "Senha redefinida. O usuário precisará alterá-la no próximo acesso."
+          : "Senha redefinida.",
+      );
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   // create form state
   const [openCreate, setOpenCreate] = useState(false);
