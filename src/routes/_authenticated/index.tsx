@@ -13,7 +13,7 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut, Shield } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut, Shield, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -42,7 +42,7 @@ function AdminLink() {
   );
 }
 
-function TeamHistoryLink() {
+function TeamLinks() {
   const { data: canSeeTeam } = useQuery({
     queryKey: ["can-see-team"],
     queryFn: async () => {
@@ -58,14 +58,23 @@ function TeamHistoryLink() {
   });
   if (!canSeeTeam) return null;
   return (
-    <Link to="/team-history">
-      <Button variant="secondary" size="sm">
-        <History className="h-4 w-4" />
-        Equipe
-      </Button>
-    </Link>
+    <>
+      <Link to="/dashboard">
+        <Button variant="secondary" size="sm">
+          <BarChart3 className="h-4 w-4" />
+          Dashboard
+        </Button>
+      </Link>
+      <Link to="/team-history">
+        <Button variant="secondary" size="sm">
+          <History className="h-4 w-4" />
+          Equipe
+        </Button>
+      </Link>
+    </>
   );
 }
+
 
 
 function SignOutButton() {
@@ -220,7 +229,7 @@ function Index() {
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
-          <TeamHistoryLink />
+          <TeamLinks />
           <AdminLink />
 
           <SignOutButton />
