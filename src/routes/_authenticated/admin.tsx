@@ -432,7 +432,7 @@ function AdminPage() {
                 onClick={() => {
                   if (!resetFor) return;
                   resetMut.mutate(
-                    { user_id: resetFor.id, password: "Logica@2026" },
+                    { user_id: resetFor.id, password: "Logica@2026", must_change_password: true },
                     {
                       onSuccess: () => {
                         setResetFor(null);
@@ -440,6 +440,7 @@ function AdminPage() {
                       },
                     },
                   );
+
                 }}
               >
                 Usar senha padrão
