@@ -188,7 +188,10 @@ function AdminPage() {
           email: r.email,
           password: r.password,
           display_name: r.display_name || r.email.split("@")[0],
-          role: r.role === "admin" ? ("admin" as const) : ("user" as const),
+          role: (["admin", "lider", "coordenador", "user"].includes(r.role.toLowerCase())
+            ? (r.role.toLowerCase() as "admin" | "user" | "lider" | "coordenador")
+            : "user"),
+
         }));
       if (cleaned.length === 0) {
         toast.error("Nenhuma linha válida no CSV");
