@@ -42,6 +42,32 @@ function AdminLink() {
   );
 }
 
+function TeamHistoryLink() {
+  const { data: canSeeTeam } = useQuery({
+    queryKey: ["can-see-team"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const checks = await Promise.all(
+        (["admin", "coordenador", "lider"] as const).map((r) =>
+          supabase.rpc("has_role", { _user_id: user.id, _role: r })
+        )
+      );
+      return checks.some((c) => !!c.data);
+    },
+  });
+  if (!canSeeTeam) return null;
+  return (
+    <Link to="/team-history">
+      <Button variant="secondary" size="sm">
+        <History className="h-4 w-4" />
+        Equipe
+      </Button>
+    </Link>
+  );
+}
+
+
 function SignOutButton() {
   const navigate = useNavigate();
   return (
