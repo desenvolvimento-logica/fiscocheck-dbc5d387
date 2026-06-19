@@ -127,7 +127,7 @@ export const updateUserRole = createServerFn({ method: "POST" })
 
 export const resetUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { user_id: string; password: string }) => d)
+  .inputValidator((d: { user_id: string; password: string; must_change_password?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -137,10 +137,11 @@ export const resetUserPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await supabaseAdmin
       .from("profiles")
-      .update({ must_change_password: true })
+      .update({ must_change_password: data.must_change_password ?? false })
       .eq("id", data.user_id);
     return { ok: true };
   });
+
 
 type ImportRow = CreateUserInput;
 type ImportResult = { email: string; ok: boolean; error?: string };
