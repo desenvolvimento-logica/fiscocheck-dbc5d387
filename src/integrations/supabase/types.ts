@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      comparisons: {
+        Row: {
+          author_role: Database["public"]["Enums"]["app_role"]
+          classifications: Json
+          classified_count: number
+          cliente: string
+          created_at: string
+          diff_count: number
+          diff_total: number
+          divergences_count: number
+          doc_type: string
+          id: string
+          items: Json
+          movement: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_role?: Database["public"]["Enums"]["app_role"]
+          classifications?: Json
+          classified_count?: number
+          cliente: string
+          created_at?: string
+          diff_count?: number
+          diff_total?: number
+          divergences_count?: number
+          doc_type: string
+          id?: string
+          items?: Json
+          movement: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_role?: Database["public"]["Enums"]["app_role"]
+          classifications?: Json
+          classified_count?: number
+          cliente?: string
+          created_at?: string
+          diff_count?: number
+          diff_total?: number
+          divergences_count?: number
+          doc_type?: string
+          id?: string
+          items?: Json
+          movement?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

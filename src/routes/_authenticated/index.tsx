@@ -42,6 +42,32 @@ function AdminLink() {
   );
 }
 
+function TeamHistoryLink() {
+  const { data: canSeeTeam } = useQuery({
+    queryKey: ["can-see-team"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const checks = await Promise.all(
+        (["admin", "coordenador", "lider"] as const).map((r) =>
+          supabase.rpc("has_role", { _user_id: user.id, _role: r })
+        )
+      );
+      return checks.some((c) => !!c.data);
+    },
+  });
+  if (!canSeeTeam) return null;
+  return (
+    <Link to="/team-history">
+      <Button variant="secondary" size="sm">
+        <History className="h-4 w-4" />
+        Equipe
+      </Button>
+    </Link>
+  );
+}
+
+
 function SignOutButton() {
   const navigate = useNavigate();
   return (
@@ -101,6 +127,29 @@ function addHistorico(entry: HistoricoEntry) {
   const list = loadHistorico();
   list.unshift(entry);
   saveHistorico(list.slice(0, 50));
+  // Persist to backend (fire-and-forget) so the team can view it
+  void (async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("comparisons").insert({
+        id: entry.id,
+        user_id: user.id,
+        cliente: entry.cliente,
+        movement: entry.movement,
+        doc_type: entry.docType,
+        diff_count: entry.diffCount,
+        diff_total: entry.diffTotal,
+        divergences_count: entry.divergencesCount,
+        classified_count: entry.classifiedCount,
+        items: entry.items as any,
+        classifications: entry.classifications as any,
+        created_at: entry.datetime,
+      });
+    } catch (e) {
+      console.error("Falha ao salvar comparação no histórico da equipe", e);
+    }
+  })();
 }
 
 function updateHistoricoClassifications(id: string, classifications: Record<string, string>) {
@@ -111,11 +160,23 @@ function updateHistoricoClassifications(id: string, classifications: Record<stri
     list[idx].classifiedCount = Object.values(classifications).filter(Boolean).length;
     saveHistorico(list);
   }
+  void supabase
+    .from("comparisons")
+    .update({
+      classifications: classifications as any,
+      classified_count: Object.values(classifications).filter(Boolean).length,
+    })
+    .eq("id", id)
+    .then(({ error }) => {
+      if (error) console.error("Falha ao atualizar classificações", error);
+    });
 }
 
 function removeHistorico(id: string) {
   saveHistorico(loadHistorico().filter((e) => e.id !== id));
+  void supabase.from("comparisons").delete().eq("id", id);
 }
+
 
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -159,7 +220,9 @@ function Index() {
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
+          <TeamHistoryLink />
           <AdminLink />
+
           <SignOutButton />
         </div>
       </header>

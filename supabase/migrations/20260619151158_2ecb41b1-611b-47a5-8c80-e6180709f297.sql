@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.set_comparison_author_role() FROM PUBLIC, anon, authenticated;
