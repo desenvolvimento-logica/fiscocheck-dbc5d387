@@ -307,6 +307,8 @@ function AdminPage() {
                       <SelectContent>
                         <SelectItem value="user">Usuário</SelectItem>
                         <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="coordenador">Coordenador</SelectItem>
+                          <SelectItem value="lider">Líder</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -368,6 +370,8 @@ function AdminPage() {
                         <SelectContent>
                           <SelectItem value="user">Usuário</SelectItem>
                           <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="coordenador">Coordenador</SelectItem>
+                          <SelectItem value="lider">Líder</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
