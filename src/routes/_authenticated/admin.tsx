@@ -74,7 +74,7 @@ type Row = {
   id: string;
   email: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "user" | "lider" | "coordenador";
   must_change_password: boolean;
   created_at: string;
 };
@@ -120,7 +120,7 @@ function AdminPage() {
   });
 
   const createMut = useMutation({
-    mutationFn: (input: { email: string; password: string; display_name: string; role: "admin" | "user" }) =>
+    mutationFn: (input: { email: string; password: string; display_name: string; role: "admin" | "user" | "lider" | "coordenador" }) =>
       create({ data: input }),
     onSuccess: () => {
       toast.success("Usuário criado");
@@ -139,7 +139,7 @@ function AdminPage() {
   });
 
   const roleMut = useMutation({
-    mutationFn: (v: { user_id: string; role: "admin" | "user" }) => setRole({ data: v }),
+    mutationFn: (v: { user_id: string; role: "admin" | "user" | "lider" | "coordenador" }) => setRole({ data: v }),
     onSuccess: () => {
       toast.success("Perfil atualizado");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
@@ -166,7 +166,7 @@ function AdminPage() {
   const [openCreate, setOpenCreate] = useState(false);
   const [cName, setCName] = useState("");
   const [cEmail, setCEmail] = useState("");
-  const [cRole, setCRole] = useState<"admin" | "user">("user");
+  const [cRole, setCRole] = useState<"admin" | "user" | "lider" | "coordenador">("user");
   const [cPassword, setCPassword] = useState("");
 
   // reset state
@@ -358,7 +358,7 @@ function AdminPage() {
                       <Select
                         value={u.role}
                         onValueChange={(v) =>
-                          roleMut.mutate({ user_id: u.id, role: v as "admin" | "user" })
+                          roleMut.mutate({ user_id: u.id, role: v as "admin" | "user" | "lider" | "coordenador" })
                         }
                       >
                         <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>

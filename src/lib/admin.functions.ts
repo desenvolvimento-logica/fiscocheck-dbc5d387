@@ -5,7 +5,7 @@ type AdminUser = {
   id: string;
   email: string;
   display_name: string | null;
-  role: "admin" | "user";
+  role: "admin" | "user" | "lider" | "coordenador";
   must_change_password: boolean;
   created_at: string;
 };
@@ -36,7 +36,7 @@ export const listUsers = createServerFn({ method: "GET" })
       .select("user_id, role");
     if (rErr) throw new Error(rErr.message);
 
-    const roleMap = new Map<string, "admin" | "user">();
+    const roleMap = new Map<string, "admin" | "user" | "lider" | "coordenador">();
     for (const r of roles ?? []) roleMap.set(r.user_id, r.role as any);
 
     return (profiles ?? []).map((p: any) => ({
@@ -53,7 +53,7 @@ type CreateUserInput = {
   email: string;
   password: string;
   display_name: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "lider" | "coordenador";
 };
 
 async function createOneUser(input: CreateUserInput) {
@@ -113,7 +113,7 @@ export const deleteUser = createServerFn({ method: "POST" })
 
 export const updateUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { user_id: string; role: "admin" | "user" }) => d)
+  .inputValidator((d: { user_id: string; role: "admin" | "user" | "lider" | "coordenador" }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
