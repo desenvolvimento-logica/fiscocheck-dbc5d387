@@ -13,7 +13,26 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "@tanstack/react-router";
+
+function SignOutButton() {
+  const navigate = useNavigate();
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={async () => {
+        await supabase.auth.signOut();
+        navigate({ to: "/auth", replace: true });
+      }}
+    >
+      <LogOut className="h-4 w-4" />
+      Sair
+    </Button>
+  );
+}
 
 type HistoricoItem = {
   nota: string;
