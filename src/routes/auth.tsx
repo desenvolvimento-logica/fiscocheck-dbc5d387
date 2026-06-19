@@ -16,12 +16,11 @@ export const Route = createFileRoute("/auth")({
 
 const schema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255),
-  password: z.string().min(6, "Mínimo 6 caracteres").max(72),
+  password: z.string().min(1, "Informe a senha").max(72),
 });
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,24 +40,13 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: `${window.location.origin}/` },
-        });
-        if (error) throw error;
-        toast.success("Cadastro realizado! Você já está conectado.");
-        navigate({ to: "/" });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: parsed.data.email,
-          password: parsed.data.password,
-        });
-        if (error) throw error;
-        toast.success("Bem-vindo de volta!");
-        navigate({ to: "/" });
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (error) throw error;
+      toast.success("Bem-vindo!");
+      navigate({ to: "/" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro inesperado";
       toast.error(
@@ -77,9 +65,7 @@ function AuthPage() {
             NF
           </div>
           <h1 className="text-xl font-semibold">Comparador de Notas Fiscais</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {mode === "signin" ? "Entre na sua conta" : "Crie sua conta"}
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Entre na sua conta</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,7 +85,7 @@ function AuthPage() {
             <Input
               id="password"
               type="password"
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -107,35 +93,13 @@ function AuthPage() {
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="animate-spin" />}
-            {mode === "signin" ? "Entrar" : "Cadastrar"}
+            Entrar
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          {mode === "signin" ? (
-            <>
-              Não tem conta?{" "}
-              <button
-                type="button"
-                className="text-primary hover:underline font-medium"
-                onClick={() => setMode("signup")}
-              >
-                Cadastre-se
-              </button>
-            </>
-          ) : (
-            <>
-              Já tem conta?{" "}
-              <button
-                type="button"
-                className="text-primary hover:underline font-medium"
-                onClick={() => setMode("signin")}
-              >
-                Entrar
-              </button>
-            </>
-          )}
-        </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          O acesso é gerenciado pelo administrador.
+        </p>
       </Card>
     </div>
   );
