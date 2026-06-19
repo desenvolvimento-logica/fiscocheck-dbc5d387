@@ -74,7 +74,7 @@ function removeHistorico(id: string) {
 }
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Comparador de Notas Fiscais — NFE / NFCe / NFSe / CTE" },
