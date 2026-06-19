@@ -13,7 +13,7 @@ import {
   fmtMoney,
   getColumns,
 } from "@/lib/comparator";
-import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut, Shield } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Download, Trash2, History, LogOut, Shield, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
