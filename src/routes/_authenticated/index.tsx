@@ -17,6 +17,7 @@ import { ArrowLeft, FileSpreadsheet, Loader2, CheckCircle2, AlertTriangle, Downl
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { PatchNotesButton } from "@/components/PatchNotesButton";
 
 function AdminLink() {
   const { data: isAdmin } = useQuery({
@@ -231,7 +232,7 @@ function Index() {
           </div>
           <TeamLinks />
           <AdminLink />
-
+          <PatchNotesButton />
           <SignOutButton />
         </div>
       </header>
