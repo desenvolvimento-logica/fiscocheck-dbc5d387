@@ -238,7 +238,7 @@ function AdminPage() {
       return;
     }
     resetMut.mutate(
-      { user_id: resetFor.id, password: resetPwVal },
+      { user_id: resetFor.id, password: resetPwVal, must_change_password: false },
       {
         onSuccess: () => {
           setResetFor(null);
@@ -246,6 +246,7 @@ function AdminPage() {
         },
       },
     );
+
   }
 
   return (
