@@ -220,7 +220,9 @@ function Index() {
             </h1>
             <p className="text-xs opacity-80">Jettax · Portal Nacional · Domínio</p>
           </div>
+          <TeamHistoryLink />
           <AdminLink />
+
           <SignOutButton />
         </div>
       </header>
