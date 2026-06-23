@@ -7,7 +7,7 @@ export async function userHasAnyRole(userId: string, roles: AppRole[]): Promise<
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", roles as string[]);
+    .in("role", roles);
   if (error) return false;
   return (data ?? []).length > 0;
 }
