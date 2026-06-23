@@ -48,10 +48,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data, error } = await supabase.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
     if (error || !data) {
       throw new Error("Forbidden");
     }
@@ -148,14 +150,21 @@ function AdminPage() {
   });
 
   const resetMut = useMutation({
-    mutationFn: (v: { user_id: string; password: string; must_change_password?: boolean }) =>
+    mutationFn: (v: { user_id: string; password?: string; must_change_password?: boolean }) =>
       resetPw({ data: v }),
-    onSuccess: (_d, v) => {
-      toast.success(
-        v.must_change_password
-          ? "Senha redefinida. O usuário precisará alterá-la no próximo acesso."
-          : "Senha redefinida.",
-      );
+    onSuccess: (d, v) => {
+      if (d?.password) {
+        toast.success(
+          `Senha provisória gerada: ${d.password}. Copie e repasse ao usuário — ele precisará alterá-la no próximo acesso.`,
+          { duration: 20000 },
+        );
+      } else {
+        toast.success(
+          v.must_change_password
+            ? "Senha redefinida. O usuário precisará alterá-la no próximo acesso."
+            : "Senha redefinida.",
+        );
+      }
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -315,7 +324,7 @@ function AdminPage() {
                   <div className="space-y-2">
                     <Label>Senha provisória</Label>
                     <Input
-                      type="text"
+                      type="password"
                       value={cPassword}
                       onChange={(e) => setCPassword(e.target.value)}
                       required
@@ -424,10 +433,10 @@ function AdminPage() {
             <div className="space-y-2">
               <Label>Nova senha provisória</Label>
               <Input
-                type="text"
+                type="password"
                 value={resetPwVal}
                 onChange={(e) => setResetPwVal(e.target.value)}
-                placeholder="Digite uma senha ou use a padrão"
+                placeholder="Digite uma senha ou gere uma provisória"
               />
               <p className="text-xs text-muted-foreground">{passwordRulesText()}</p>
             </div>
@@ -439,7 +448,7 @@ function AdminPage() {
                 onClick={() => {
                   if (!resetFor) return;
                   resetMut.mutate(
-                    { user_id: resetFor.id, password: "Logica@2026", must_change_password: true },
+                    { user_id: resetFor.id, must_change_password: true },
                     {
                       onSuccess: () => {
                         setResetFor(null);
@@ -447,10 +456,9 @@ function AdminPage() {
                       },
                     },
                   );
-
                 }}
               >
-                Usar senha padrão
+                Gerar senha provisória
               </Button>
               <Button type="submit" disabled={resetMut.isPending || !resetPwVal}>
                 {resetMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}

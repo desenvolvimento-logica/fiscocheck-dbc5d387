@@ -73,12 +73,12 @@ function DashboardPage() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const checks = await Promise.all(
-        (["admin", "coordenador", "lider"] as const).map((r) =>
-          supabase.rpc("has_role", { _user_id: user.id, _role: r })
-        )
-      );
-      return checks.some((c) => !!c.data);
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["admin", "coordenador", "lider"]);
+      return (data ?? []).length > 0;
     },
   });
 

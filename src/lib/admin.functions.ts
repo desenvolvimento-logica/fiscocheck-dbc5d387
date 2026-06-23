@@ -11,10 +11,12 @@ type AdminUser = {
 };
 
 async function ensureAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden: admin only");
 }
@@ -125,21 +127,41 @@ export const updateUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+function generateTempPassword(): string {
+  // 16-char password with letters, digits, and a symbol — meets strong password rules
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghijkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const symbols = "!@#$%&*?";
+  const all = upper + lower + digits + symbols;
+  const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+  const chars = [pick(upper), pick(lower), pick(digits), pick(symbols)];
+  for (let i = 0; i < 12; i++) chars.push(pick(all));
+  // shuffle
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
+
 export const resetUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { user_id: string; password: string; must_change_password?: boolean }) => d)
+  .inputValidator((d: { user_id: string; password?: string; must_change_password?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const password = data.password && data.password.length > 0 ? data.password : generateTempPassword();
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
-      password: data.password,
+      password,
     });
     if (error) throw new Error(error.message);
     await supabaseAdmin
       .from("profiles")
       .update({ must_change_password: data.must_change_password ?? false })
       .eq("id", data.user_id);
-    return { ok: true };
+    // Only return the generated password when the admin did NOT supply one
+    return { ok: true, password: data.password ? undefined : password };
   });
 
 

@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PatchNotesButton } from "@/components/PatchNotesButton";
+import { userHasAnyRole } from "@/lib/roles";
 
 function AdminLink() {
   const { data: isAdmin } = useQuery({
@@ -25,11 +26,7 @@ function AdminLink() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      return !!data;
+      return userHasAnyRole(user.id, ["admin"]);
     },
   });
   if (!isAdmin) return null;
@@ -49,12 +46,7 @@ function TeamLinks() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const checks = await Promise.all(
-        (["admin", "coordenador", "lider"] as const).map((r) =>
-          supabase.rpc("has_role", { _user_id: user.id, _role: r })
-        )
-      );
-      return checks.some((c) => !!c.data);
+      return userHasAnyRole(user.id, ["admin", "coordenador", "lider"]);
     },
   });
   if (!canSeeTeam) return null;

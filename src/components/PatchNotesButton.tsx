@@ -24,8 +24,8 @@ const NOTES: Note[] = [
     title: "Redefinição de senha pelo administrador",
     items: [
       "Agora o administrador pode redefinir a senha de qualquer usuário diretamente pela tela de administração.",
-      "É possível escolher uma senha personalizada ou usar a senha padrão Logica@2026.",
-      "Quando a senha padrão for usada, o usuário será solicitado a criar uma nova senha no próximo acesso.",
+      "É possível digitar uma senha personalizada ou gerar automaticamente uma senha provisória segura.",
+      "Quando a senha provisória for gerada, o usuário será solicitado a criar uma nova senha no próximo acesso.",
     ],
   },
   {
