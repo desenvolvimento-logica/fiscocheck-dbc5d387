@@ -150,14 +150,21 @@ function AdminPage() {
   });
 
   const resetMut = useMutation({
-    mutationFn: (v: { user_id: string; password: string; must_change_password?: boolean }) =>
+    mutationFn: (v: { user_id: string; password?: string; must_change_password?: boolean }) =>
       resetPw({ data: v }),
-    onSuccess: (_d, v) => {
-      toast.success(
-        v.must_change_password
-          ? "Senha redefinida. O usuário precisará alterá-la no próximo acesso."
-          : "Senha redefinida.",
-      );
+    onSuccess: (d, v) => {
+      if (d?.password) {
+        toast.success(
+          `Senha provisória gerada: ${d.password}. Copie e repasse ao usuário — ele precisará alterá-la no próximo acesso.`,
+          { duration: 20000 },
+        );
+      } else {
+        toast.success(
+          v.must_change_password
+            ? "Senha redefinida. O usuário precisará alterá-la no próximo acesso."
+            : "Senha redefinida.",
+        );
+      }
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (e: Error) => toast.error(e.message),
