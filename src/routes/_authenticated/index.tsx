@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PatchNotesButton } from "@/components/PatchNotesButton";
+import { userHasAnyRole } from "@/lib/roles";
 
 function AdminLink() {
   const { data: isAdmin } = useQuery({
