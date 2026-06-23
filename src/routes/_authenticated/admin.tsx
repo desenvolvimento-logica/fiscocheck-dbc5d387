@@ -433,10 +433,10 @@ function AdminPage() {
             <div className="space-y-2">
               <Label>Nova senha provisória</Label>
               <Input
-                type="text"
+                type="password"
                 value={resetPwVal}
                 onChange={(e) => setResetPwVal(e.target.value)}
-                placeholder="Digite uma senha ou use a padrão"
+                placeholder="Digite uma senha ou gere uma provisória"
               />
               <p className="text-xs text-muted-foreground">{passwordRulesText()}</p>
             </div>
@@ -448,7 +448,7 @@ function AdminPage() {
                 onClick={() => {
                   if (!resetFor) return;
                   resetMut.mutate(
-                    { user_id: resetFor.id, password: "Logica@2026", must_change_password: true },
+                    { user_id: resetFor.id, must_change_password: true },
                     {
                       onSuccess: () => {
                         setResetFor(null);
@@ -456,10 +456,9 @@ function AdminPage() {
                       },
                     },
                   );
-
                 }}
               >
-                Usar senha padrão
+                Gerar senha provisória
               </Button>
               <Button type="submit" disabled={resetMut.isPending || !resetPwVal}>
                 {resetMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
