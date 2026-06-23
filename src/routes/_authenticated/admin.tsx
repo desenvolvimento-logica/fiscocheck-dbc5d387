@@ -324,7 +324,7 @@ function AdminPage() {
                   <div className="space-y-2">
                     <Label>Senha provisória</Label>
                     <Input
-                      type="text"
+                      type="password"
                       value={cPassword}
                       onChange={(e) => setCPassword(e.target.value)}
                       required
