@@ -223,20 +223,16 @@ function AdminPage() {
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = strongPasswordSchema.safeParse(cPassword);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
+    const password = cPassword.trim().length > 0 ? cPassword : DEFAULT_FIRST_ACCESS_PASSWORD;
     createMut.mutate(
-      { email: cEmail.trim(), password: cPassword, display_name: cName.trim(), role: cRole },
+      { email: cEmail.trim(), password, display_name: cName.trim(), role: cRole },
       {
         onSuccess: () => {
           setOpenCreate(false);
           setCName("");
           setCEmail("");
           setCRole("user");
-          setCPassword("");
+          setCPassword(DEFAULT_FIRST_ACCESS_PASSWORD);
         },
       },
     );
