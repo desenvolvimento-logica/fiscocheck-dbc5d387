@@ -9,6 +9,7 @@ import {
   updateUserRole,
   resetUserPassword,
   importUsersCsv,
+  DEFAULT_FIRST_ACCESS_PASSWORD,
 } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { strongPasswordSchema, passwordRulesText } from "@/lib/password";
@@ -92,8 +93,8 @@ function parseCsv(text: string): Array<{ display_name: string; email: string; ro
     role: header.findIndex((h) => ["perfil", "role"].includes(h)),
     pw: header.findIndex((h) => ["senha", "password", "senha_provisoria", "senha provisória"].includes(h)),
   };
-  if (idx.email < 0 || idx.pw < 0) {
-    throw new Error("CSV precisa ter colunas: nome, email, perfil, senha");
+  if (idx.email < 0) {
+    throw new Error("CSV precisa ter no mínimo a coluna: email");
   }
   return lines.slice(1).map((line) => {
     const cols = line.split(sep).map((c) => c.trim());
@@ -101,7 +102,7 @@ function parseCsv(text: string): Array<{ display_name: string; email: string; ro
       display_name: idx.name >= 0 ? cols[idx.name] ?? "" : "",
       email: cols[idx.email] ?? "",
       role: idx.role >= 0 ? cols[idx.role] ?? "user" : "user",
-      password: cols[idx.pw] ?? "",
+      password: idx.pw >= 0 ? cols[idx.pw] ?? "" : "",
     };
   });
 }
@@ -176,7 +177,7 @@ function AdminPage() {
   const [cName, setCName] = useState("");
   const [cEmail, setCEmail] = useState("");
   const [cRole, setCRole] = useState<"admin" | "user" | "lider" | "coordenador">("user");
-  const [cPassword, setCPassword] = useState("");
+  const [cPassword, setCPassword] = useState(DEFAULT_FIRST_ACCESS_PASSWORD);
 
   // reset state
   const [resetFor, setResetFor] = useState<Row | null>(null);
@@ -192,10 +193,10 @@ function AdminPage() {
       const text = await file.text();
       const rows = parseCsv(text);
       const cleaned = rows
-        .filter((r) => r.email && r.password)
+        .filter((r) => r.email)
         .map((r) => ({
           email: r.email,
-          password: r.password,
+          password: r.password && r.password.length > 0 ? r.password : DEFAULT_FIRST_ACCESS_PASSWORD,
           display_name: r.display_name || r.email.split("@")[0],
           role: (["admin", "lider", "coordenador", "user"].includes(r.role.toLowerCase())
             ? (r.role.toLowerCase() as "admin" | "user" | "lider" | "coordenador")
@@ -222,20 +223,16 @@ function AdminPage() {
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = strongPasswordSchema.safeParse(cPassword);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
+    const password = cPassword.trim().length > 0 ? cPassword : DEFAULT_FIRST_ACCESS_PASSWORD;
     createMut.mutate(
-      { email: cEmail.trim(), password: cPassword, display_name: cName.trim(), role: cRole },
+      { email: cEmail.trim(), password, display_name: cName.trim(), role: cRole },
       {
         onSuccess: () => {
           setOpenCreate(false);
           setCName("");
           setCEmail("");
           setCRole("user");
-          setCPassword("");
+          setCPassword(DEFAULT_FIRST_ACCESS_PASSWORD);
         },
       },
     );
@@ -322,14 +319,15 @@ function AdminPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Senha provisória</Label>
+                    <Label>Senha de primeiro acesso</Label>
                     <Input
                       type="password"
                       value={cPassword}
                       onChange={(e) => setCPassword(e.target.value)}
-                      required
                     />
-                    <p className="text-xs text-muted-foreground">{passwordRulesText()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Padrão: <code>{DEFAULT_FIRST_ACCESS_PASSWORD}</code>. O colaborador deverá alterá-la no primeiro acesso.
+                    </p>
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createMut.isPending}>

@@ -51,9 +51,11 @@ export const listUsers = createServerFn({ method: "GET" })
     }));
   });
 
+export const DEFAULT_FIRST_ACCESS_PASSWORD = "Logica@2026";
+
 type CreateUserInput = {
   email: string;
-  password: string;
+  password?: string;
   display_name: string;
   role: "admin" | "user" | "lider" | "coordenador";
 };
@@ -61,9 +63,10 @@ type CreateUserInput = {
 async function createOneUser(input: CreateUserInput) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const email = input.email.trim().toLowerCase();
+  const password = input.password && input.password.length > 0 ? input.password : DEFAULT_FIRST_ACCESS_PASSWORD;
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
-    password: input.password,
+    password,
     email_confirm: true,
     user_metadata: {
       display_name: input.display_name,
