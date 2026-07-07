@@ -9,6 +9,7 @@ import {
   updateUserRole,
   resetUserPassword,
   importUsersCsv,
+  DEFAULT_FIRST_ACCESS_PASSWORD,
 } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { strongPasswordSchema, passwordRulesText } from "@/lib/password";
