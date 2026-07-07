@@ -319,14 +319,15 @@ function AdminPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Senha provisória</Label>
+                    <Label>Senha de primeiro acesso</Label>
                     <Input
                       type="password"
                       value={cPassword}
                       onChange={(e) => setCPassword(e.target.value)}
-                      required
                     />
-                    <p className="text-xs text-muted-foreground">{passwordRulesText()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Padrão: <code>{DEFAULT_FIRST_ACCESS_PASSWORD}</code>. O colaborador deverá alterá-la no primeiro acesso.
+                    </p>
                   </div>
                   <DialogFooter>
                     <Button type="submit" disabled={createMut.isPending}>
