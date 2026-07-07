@@ -93,8 +93,8 @@ function parseCsv(text: string): Array<{ display_name: string; email: string; ro
     role: header.findIndex((h) => ["perfil", "role"].includes(h)),
     pw: header.findIndex((h) => ["senha", "password", "senha_provisoria", "senha provisória"].includes(h)),
   };
-  if (idx.email < 0 || idx.pw < 0) {
-    throw new Error("CSV precisa ter colunas: nome, email, perfil, senha");
+  if (idx.email < 0) {
+    throw new Error("CSV precisa ter no mínimo a coluna: email");
   }
   return lines.slice(1).map((line) => {
     const cols = line.split(sep).map((c) => c.trim());
