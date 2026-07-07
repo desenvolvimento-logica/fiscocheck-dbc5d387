@@ -102,7 +102,7 @@ function parseCsv(text: string): Array<{ display_name: string; email: string; ro
       display_name: idx.name >= 0 ? cols[idx.name] ?? "" : "",
       email: cols[idx.email] ?? "",
       role: idx.role >= 0 ? cols[idx.role] ?? "user" : "user",
-      password: cols[idx.pw] ?? "",
+      password: idx.pw >= 0 ? cols[idx.pw] ?? "" : "",
     };
   });
 }
