@@ -177,7 +177,7 @@ function AdminPage() {
   const [cName, setCName] = useState("");
   const [cEmail, setCEmail] = useState("");
   const [cRole, setCRole] = useState<"admin" | "user" | "lider" | "coordenador">("user");
-  const [cPassword, setCPassword] = useState("");
+  const [cPassword, setCPassword] = useState(DEFAULT_FIRST_ACCESS_PASSWORD);
 
   // reset state
   const [resetFor, setResetFor] = useState<Row | null>(null);
