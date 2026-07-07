@@ -193,10 +193,10 @@ function AdminPage() {
       const text = await file.text();
       const rows = parseCsv(text);
       const cleaned = rows
-        .filter((r) => r.email && r.password)
+        .filter((r) => r.email)
         .map((r) => ({
           email: r.email,
-          password: r.password,
+          password: r.password && r.password.length > 0 ? r.password : DEFAULT_FIRST_ACCESS_PASSWORD,
           display_name: r.display_name || r.email.split("@")[0],
           role: (["admin", "lider", "coordenador", "user"].includes(r.role.toLowerCase())
             ? (r.role.toLowerCase() as "admin" | "user" | "lider" | "coordenador")
