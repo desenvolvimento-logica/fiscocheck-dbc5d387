@@ -532,7 +532,7 @@ function CompareStep({
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <FileInput
-          label="Relatório Jettax (Excel)"
+          label="Relatório Cliente (Excel)"
           accept=".xlsx,.xls"
           file={jettax}
           onChange={setJettax}
