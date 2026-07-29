@@ -738,25 +738,21 @@ function MissingPanel({
   };
 
   const salvar = () => {
-    setSalvas((prev) => {
-      const next = { ...prev };
-      for (const [k, v] of Object.entries(classificacoes)) {
-        if (v) next[k] = v;
-      }
-      persist(next);
-      return next;
-    });
+    const next = { ...salvas };
+    for (const [k, v] of Object.entries(classificacoes)) {
+      if (v) next[k] = v;
+    }
+    setSalvas(next);
     setClassificacoes({});
+    persist(next);
   };
 
   const alterarClassificada = (k: string, value: string) => {
-    setSalvas((prev) => {
-      const next = { ...prev };
-      if (value) next[k] = value;
-      else delete next[k];
-      persist(next);
-      return next;
-    });
+    const next = { ...salvas };
+    if (value) next[k] = value;
+    else delete next[k];
+    setSalvas(next);
+    persist(next);
   };
 
   const pendentesParaSalvar = Object.values(classificacoes).filter(Boolean).length;
