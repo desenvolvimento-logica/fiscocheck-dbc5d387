@@ -178,9 +178,7 @@ export async function parseDominioExcel(
     for (const row of rows) {
       if (!row) continue;
       const especie =
-        espIdx >= 0 && row[espIdx] != null
-          ? String(row[espIdx]).trim().replace(/\D+/g, "")
-          : "";
+        espIdx >= 0 && row[espIdx] != null ? normalizeEspecie(row[espIdx]) : "";
       if (allowed.size > 0 && !allowed.has(especie)) continue;
       const nota = normalizeNota(row[notaIdx]);
       if (!nota) continue;
