@@ -521,7 +521,7 @@ function CompareStep({
       setResult(res);
       const cliente = jParsed.clientName || pParsed.clientName || "Cliente";
       const id = crypto.randomUUID();
-      addHistorico({
+      await addHistorico({
         id,
         cliente,
         movement,
@@ -773,7 +773,7 @@ function MissingPanel({
 
   const persist = (nextSalvas: Record<string, string>) => {
     if (historicoId) {
-      updateHistoricoClassifications(historicoId, nextSalvas);
+      void updateHistoricoClassifications(historicoId, nextSalvas);
       onClassificationsChange();
     }
   };
@@ -959,7 +959,7 @@ function HistoricoPanel({ version, onChange }: { version: number; onChange: () =
   };
 
   const remover = (id: string) => {
-    removeHistorico(id);
+    void removeHistorico(id);
     onChange();
   };
 
