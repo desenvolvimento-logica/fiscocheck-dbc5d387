@@ -130,6 +130,15 @@ export async function parseExcel(
 
 export type DominioRecord = ParsedRecord & { especie?: string };
 
+// Normaliza o código da espécie: "36", " 36 ", "036", "36,0", "36 - NF-e" -> "36"
+function normalizeEspecie(v: any): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).trim();
+  const m = s.match(/\d+/);
+  if (!m) return "";
+  return String(parseInt(m[0], 10));
+}
+
 // Dominio Excel — colunas por movimento/documento
 type DominioColsCfg = {
   nota: string;
@@ -178,9 +187,7 @@ export async function parseDominioExcel(
     for (const row of rows) {
       if (!row) continue;
       const especie =
-        espIdx >= 0 && row[espIdx] != null
-          ? String(row[espIdx]).trim().replace(/\D+/g, "")
-          : "";
+        espIdx >= 0 && row[espIdx] != null ? normalizeEspecie(row[espIdx]) : "";
       if (allowed.size > 0 && !allowed.has(especie)) continue;
       const nota = normalizeNota(row[notaIdx]);
       if (!nota) continue;
@@ -318,10 +325,9 @@ export async function parseDominioPdf(
                 }
                 return Math.abs(it.x - especieX!) < 40;
               });
-              const especieStr = especieItems
-                .map((v) => v.str)
-                .join("")
-                .replace(/\D+/g, "");
+              const especieStr = normalizeEspecie(
+                especieItems.map((v) => v.str).join(""),
+              );
               if (!allowedEspecies.has(especieStr)) continue;
             }
 
