@@ -935,7 +935,13 @@ function HistoricoPanel({ version, onChange }: { version: number; onChange: () =
   const [entries, setEntries] = useState<HistoricoEntry[]>([]);
 
   useEffect(() => {
-    setEntries(loadHistorico());
+    let alive = true;
+    void fetchHistorico().then((list) => {
+      if (alive) setEntries(list);
+    });
+    return () => {
+      alive = false;
+    };
   }, [version]);
 
   const baixar = async (entry: HistoricoEntry) => {
