@@ -437,20 +437,25 @@ export function compare(
   const combinedTotal = combinedList.reduce((s, v) => s + v.valor, 0);
   const combinedCount = combinedList.length;
 
-  // Dedup do Domínio: nota + espécie + fornecedor + valor
+  // Agrupamento do Domínio: nota + fornecedor (soma os valores das linhas,
+  // ex.: valor principal + frete/complemento lançados em linhas separadas)
   const dominioKey = (r: DominioRecord) =>
-    `${r.nota}|${r.especie ?? ""}|${normFornec(r.fornecedor)}|${r.valor.toFixed(2)}`;
+    `${r.nota}|${normFornec(r.fornecedor)}`;
   const dMap = new Map<string, MissingRecord>();
   const dominioNotas = new Set<string>();
   for (const r of dominio) {
     const k = dominioKey(r);
-    if (!dMap.has(k)) {
+    const existing = dMap.get(k);
+    if (existing) {
+      existing.valor += r.valor;
+    } else {
       dMap.set(k, { nota: r.nota, valor: r.valor, fornecedor: r.fornecedor });
       dominioNotas.add(r.nota);
     }
   }
   let dTotal = 0;
   dMap.forEach((v) => (dTotal += v.valor));
+
 
   const missingInDominio: MissingRecord[] = [];
   const seenMissing = new Set<string>();
