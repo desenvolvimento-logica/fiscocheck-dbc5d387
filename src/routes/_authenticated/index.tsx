@@ -125,36 +125,74 @@ function saveHistorico(entries: HistoricoEntry[]) {
   localStorage.setItem(HISTORICO_KEY, JSON.stringify(entries));
 }
 
-function addHistorico(entry: HistoricoEntry) {
+async function addHistorico(entry: HistoricoEntry) {
   const list = loadHistorico();
   list.unshift(entry);
   saveHistorico(list.slice(0, 50));
-  // Persist to backend (fire-and-forget) so the team can view it
-  void (async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      await supabase.from("comparisons").insert({
-        id: entry.id,
-        user_id: user.id,
-        cliente: entry.cliente,
-        movement: entry.movement,
-        doc_type: entry.docType,
-        diff_count: entry.diffCount,
-        diff_total: entry.diffTotal,
-        divergences_count: entry.divergencesCount,
-        classified_count: entry.classifiedCount,
-        items: entry.items as any,
-        classifications: entry.classifications as any,
-        created_at: entry.datetime,
-      });
-    } catch (e) {
-      console.error("Falha ao salvar comparação no histórico da equipe", e);
-    }
-  })();
+  // Persist to backend so it is available on any device and for the team
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("comparisons").insert({
+      id: entry.id,
+      user_id: user.id,
+      cliente: entry.cliente,
+      movement: entry.movement,
+      doc_type: entry.docType,
+      diff_count: entry.diffCount,
+      diff_total: entry.diffTotal,
+      divergences_count: entry.divergencesCount,
+      classified_count: entry.classifiedCount,
+      items: entry.items as any,
+      classifications: entry.classifications as any,
+      created_at: entry.datetime,
+    });
+    if (error) throw error;
+  } catch (e) {
+    console.error("Falha ao salvar comparação no histórico da equipe", e);
+    toast.error("Não foi possível salvar a comparação no histórico.");
+  }
 }
 
-function updateHistoricoClassifications(id: string, classifications: Record<string, string>) {
+async function fetchHistorico(): Promise<HistoricoEntry[]> {
+  const local = loadHistorico();
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return local;
+    const { data, error } = await supabase
+      .from("comparisons")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    const remote: HistoricoEntry[] = (data ?? []).map((r: any) => ({
+      id: r.id,
+      cliente: r.cliente,
+      movement: r.movement as Movement,
+      docType: r.doc_type as DocType,
+      datetime: r.created_at,
+      diffCount: r.diff_count,
+      diffTotal: Number(r.diff_total),
+      divergencesCount: r.divergences_count,
+      classifiedCount: r.classified_count,
+      items: (r.items ?? []) as HistoricoItem[],
+      classifications: (r.classifications ?? {}) as Record<string, string>,
+    }));
+    const ids = new Set(remote.map((e) => e.id));
+    return [...remote, ...local.filter((e) => !ids.has(e.id))].sort((a, b) =>
+      a.datetime < b.datetime ? 1 : -1,
+    );
+  } catch (e) {
+    console.error("Falha ao carregar histórico", e);
+    return local;
+  }
+}
+
+async function updateHistoricoClassifications(
+  id: string,
+  classifications: Record<string, string>,
+) {
   const list = loadHistorico();
   const idx = list.findIndex((e) => e.id === id);
   if (idx >= 0) {
@@ -162,21 +200,23 @@ function updateHistoricoClassifications(id: string, classifications: Record<stri
     list[idx].classifiedCount = Object.values(classifications).filter(Boolean).length;
     saveHistorico(list);
   }
-  void supabase
+  const { error } = await supabase
     .from("comparisons")
     .update({
       classifications: classifications as any,
       classified_count: Object.values(classifications).filter(Boolean).length,
     })
-    .eq("id", id)
-    .then(({ error }) => {
-      if (error) console.error("Falha ao atualizar classificações", error);
-    });
+    .eq("id", id);
+  if (error) {
+    console.error("Falha ao atualizar classificações", error);
+    toast.error("Não foi possível salvar as classificações.");
+  }
 }
 
-function removeHistorico(id: string) {
+async function removeHistorico(id: string) {
   saveHistorico(loadHistorico().filter((e) => e.id !== id));
-  void supabase.from("comparisons").delete().eq("id", id);
+  const { error } = await supabase.from("comparisons").delete().eq("id", id);
+  if (error) console.error("Falha ao remover comparação", error);
 }
 
 
