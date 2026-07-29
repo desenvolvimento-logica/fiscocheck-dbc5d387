@@ -810,7 +810,19 @@ function MissingPanel({
         Classificação: salvas[k] || classificacoes[k] || "",
       };
     });
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const ws = XLSX.utils.json_to_sheet(
+      rows.length > 0
+        ? rows
+        : [
+            {
+              Nota: "",
+              [fornecedorLabel]: "",
+              "Valor Contábil": "",
+              "Diferença no": "",
+              Classificação: "Nenhuma divergência encontrada",
+            },
+          ],
+    );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Notas");
     const safe = title.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
@@ -839,11 +851,10 @@ function MissingPanel({
                 : `Mostrar Classificadas (${classifiedCount})`}
             </Button>
           )}
-          {items.length > 0 && (
-            <Button size="sm" variant="outline" onClick={exportXlsx}>
-              <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={exportXlsx}>
+            <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
+          </Button>
+
         </div>
       </div>
       {visibleItems.length === 0 ? (
