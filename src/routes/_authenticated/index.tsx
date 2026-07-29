@@ -1060,10 +1060,10 @@ function HistoricoPanel({ version, onChange }: { version: number; onChange: () =
                 variant="outline"
                 className="w-full mt-2 h-7 text-xs"
                 onClick={() => baixar(e)}
-                disabled={e.items.length === 0}
               >
                 <Download className="mr-1 h-3 w-3" /> Baixar relatório
               </Button>
+
             </div>
           ))}
         </div>
