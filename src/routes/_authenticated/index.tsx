@@ -19,6 +19,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PatchNotesButton } from "@/components/PatchNotesButton";
 import { userHasAnyRole } from "@/lib/roles";
+import { toast } from "sonner";
 
 function AdminLink() {
   const { data: isAdmin } = useQuery({
