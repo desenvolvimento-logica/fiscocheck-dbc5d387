@@ -130,6 +130,15 @@ export async function parseExcel(
 
 export type DominioRecord = ParsedRecord & { especie?: string };
 
+// Normaliza o código da espécie: "36", " 36 ", "036", "36,0", "36 - NF-e" -> "36"
+function normalizeEspecie(v: any): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).trim();
+  const m = s.match(/\d+/);
+  if (!m) return "";
+  return String(parseInt(m[0], 10));
+}
+
 // Dominio Excel — colunas por movimento/documento
 type DominioColsCfg = {
   nota: string;
