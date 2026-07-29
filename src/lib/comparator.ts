@@ -325,10 +325,9 @@ export async function parseDominioPdf(
                 }
                 return Math.abs(it.x - especieX!) < 40;
               });
-              const especieStr = especieItems
-                .map((v) => v.str)
-                .join("")
-                .replace(/\D+/g, "");
+              const especieStr = normalizeEspecie(
+                especieItems.map((v) => v.str).join(""),
+              );
               if (!allowedEspecies.has(especieStr)) continue;
             }
 
