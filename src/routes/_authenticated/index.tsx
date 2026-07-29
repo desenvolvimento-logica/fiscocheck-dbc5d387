@@ -851,11 +851,10 @@ function MissingPanel({
                 : `Mostrar Classificadas (${classifiedCount})`}
             </Button>
           )}
-          {items.length > 0 && (
-            <Button size="sm" variant="outline" onClick={exportXlsx}>
-              <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={exportXlsx}>
+            <FileSpreadsheet className="mr-1 h-4 w-4" /> Exportar XLSX
+          </Button>
+
         </div>
       </div>
       {visibleItems.length === 0 ? (
