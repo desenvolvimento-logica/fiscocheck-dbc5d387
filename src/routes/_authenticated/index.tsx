@@ -967,7 +967,19 @@ function HistoricoPanel({ version, onChange }: { version: number; onChange: () =
         Classificação: entry.classifications[k] || "",
       };
     });
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const ws = XLSX.utils.json_to_sheet(
+      rows.length > 0
+        ? rows
+        : [
+            {
+              Nota: "",
+              Fornecedor: "",
+              "Valor Contábil": "",
+              "Diferença no": "",
+              Classificação: "Nenhuma divergência encontrada",
+            },
+          ],
+    );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Notas");
     const safeCli = entry.cliente.replace(/[^a-z0-9]+/gi, "_").toLowerCase().slice(0, 40);
