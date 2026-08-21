@@ -120,6 +120,20 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("access_token")) {
+      const params = new URLSearchParams(hash.substring(1));
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+      if (access_token && refresh_token) {
+        supabase.auth.setSession({ access_token, refresh_token }).then(() => {
+          window.history.replaceState(null, "", window.location.pathname);
+        });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
