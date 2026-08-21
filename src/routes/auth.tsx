@@ -40,10 +40,10 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: parsed.data.email,
-        password: parsed.data.password,
+      const { token_hash } = await signInWithExternalBase({
+        data: { email: parsed.data.email, password: parsed.data.password },
       });
+      const { error } = await supabase.auth.verifyOtp({ type: "email", token_hash });
       if (error) throw error;
       toast.success("Bem-vindo!");
       navigate({ to: "/" });
@@ -56,6 +56,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
