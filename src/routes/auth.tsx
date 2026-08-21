@@ -26,12 +26,50 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
-    });
+    let cancelled = false;
+    (async () => {
+      // 1) Token vindo na URL (hash ou query) — login automático
+      const hash = window.location.hash.startsWith("#")
+        ? window.location.hash.substring(1)
+        : "";
+      const hashParams = new URLSearchParams(hash);
+      const queryParams = new URLSearchParams(window.location.search);
+      const access_token =
+        hashParams.get("access_token") ?? queryParams.get("access_token");
+      const refresh_token =
+        hashParams.get("refresh_token") ?? queryParams.get("refresh_token");
+
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        });
+        window.history.replaceState(null, "", window.location.pathname);
+        if (!error) {
+          if (!cancelled) navigate({ to: "/" });
+          return;
+        }
+      }
+
+      // 2) Sessão já existente
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session) {
+        navigate({ to: "/" });
+        return;
+      }
+
+      // 3) Sem token: exibe o formulário
+      setChecking(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
