@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { signInWithExternalBase } from "@/lib/external-auth.functions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,10 +42,10 @@ function AuthPage() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: parsed.data.email,
-        password: parsed.data.password,
+      const { token_hash } = await signInWithExternalBase({
+        data: { email: parsed.data.email, password: parsed.data.password },
       });
+      const { error } = await supabase.auth.verifyOtp({ type: "email", token_hash });
       if (error) throw error;
       toast.success("Bem-vindo!");
       navigate({ to: "/" });
@@ -56,6 +58,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
