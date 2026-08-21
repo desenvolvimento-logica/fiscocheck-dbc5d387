@@ -98,7 +98,19 @@ function AuthPage() {
   }
 
 
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Loader2 className="animate-spin" />
+          Verificando acesso...
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
