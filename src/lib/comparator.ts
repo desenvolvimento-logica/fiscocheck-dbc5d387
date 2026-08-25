@@ -222,6 +222,13 @@ export async function parseDominioExcel(
   const cfopIdx = cfg.cfop ? colLetterToIndex(cfg.cfop) : -1;
   const valorIdx = colLetterToIndex(cfg.valor);
   const records: DominioRecord[] = [];
+  const norm = (v: any) =>
+    String(v ?? "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
     const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
@@ -229,6 +236,39 @@ export async function parseDominioExcel(
       raw: true,
       defval: null,
     });
+    // Detecta a linha de cabeçalho e mapeia as colunas pelo nome
+    // (o layout do Domínio muda entre Entradas e Saídas)
+    let hNota = -1,
+      hValor = -1,
+      hEsp = -1,
+      hForn = -1,
+      hCfop = -1,
+      headerRow = -1;
+    for (let i = 0; i < Math.min(rows.length, 30); i++) {
+      const row = rows[i];
+      if (!row) continue;
+      const cells = row.map(norm);
+      const iNota = cells.findIndex((c) => c === "nota" || c === "numero" || c === "nº nota");
+      const iValor = cells.findIndex((c) => c.includes("valor contabil"));
+      if (iNota >= 0 && iValor >= 0) {
+        headerRow = i;
+        hNota = iNota;
+        hValor = iValor;
+        hEsp = cells.findIndex((c) => c.includes("especie"));
+        hForn = cells.findIndex(
+          (c) => c.includes("fornecedor") || c.includes("cliente") || c.includes("participante"),
+        );
+        hCfop = cells.findIndex((c) => c.includes("cfop"));
+        break;
+      }
+    }
+    const useHeader = headerRow >= 0;
+    const iNota = useHeader ? hNota : notaIdx;
+    const iValor = useHeader ? hValor : valorIdx;
+    const iEsp = useHeader ? hEsp : espIdx;
+    const iForn = useHeader ? hForn : fornIdx;
+    const iCfop = useHeader ? hCfop : cfopIdx;
+
     for (const row of rows) {
       if (!row) continue;
       const especie =
