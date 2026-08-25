@@ -1,14 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithExternalBase } from "@/lib/external-auth.functions";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -16,17 +10,10 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const schema = z.object({
-  email: z.string().trim().email("E-mail inválido").max(255),
-  password: z.string().min(1, "Informe a senha").max(72),
-});
-
 function AuthPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+
 
   useEffect(() => {
     let cancelled = false;
