@@ -12,6 +12,22 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "Login — Comparador de Notas Fiscais" },
+      {
+        name: "description",
+        content: "Acesse o comparador fiscal com seu e-mail e senha.",
+      },
+      { property: "og:title", content: "Login — Comparador de Notas Fiscais" },
+      {
+        property: "og:description",
+        content: "Acesse o comparador fiscal com seu e-mail e senha.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AuthPage,
 });
 
