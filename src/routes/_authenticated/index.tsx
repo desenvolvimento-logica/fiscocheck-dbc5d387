@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   parseExcel,
+  parsePortalExcel,
   parseDominioPdf,
   parseDominioExcel,
   compare,
@@ -500,8 +501,9 @@ function CompareStep({
   const [result, setResult] = useState<CompareResult | null>(null);
 
   const cols = getColumns(movement, docType);
+  const isSaidaNFSe = movement === "saida" && docType === "NFSe";
 
-  const canCompare = (jettax || portal) && dominio;
+  const canCompare = (isSaidaNFSe ? portal : jettax || portal) && dominio;
 
   const run = async () => {
     setError(null);
@@ -512,7 +514,7 @@ function CompareStep({
       const isExcelDom = /\.xlsx?$/i.test(dominio.name);
       const [jParsed, pParsed, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
-        portal ? parseExcel(portal, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
+        portal ? parsePortalExcel(portal) : Promise.resolve({ records: [], clientName: undefined }),
         isExcelDom
           ? parseDominioExcel(dominio, movement, docType)
           : parseDominioPdf(dominio, movement, docType),
@@ -562,32 +564,41 @@ function CompareStep({
             Comparar — {movement === "entrada" ? "Entrada" : "Saída"} · {docType}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Importe as planilhas da empresa e o PDF do Domínio. Pelo menos uma planilha
-            (Jettax ou Portal Nacional) é obrigatória.
+            {isSaidaNFSe
+              ? "Importe a planilha do Portal Nacional e o relatório do Domínio."
+              : "Importe as planilhas da empresa e o relatório do Domínio. Pelo menos uma planilha (Cliente ou Portal Nacional) é obrigatória."}
           </p>
         </div>
         <div className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
-          Colunas Jettax — Nota: <span className="font-mono font-semibold">{cols.nota}</span> · Valor Contábil: <span className="font-mono font-semibold">{cols.valor}</span>
+          {isSaidaNFSe ? (
+            <>
+              Colunas Portal Nacional — Nota: <span className="font-mono font-semibold">A</span> · Valor Contábil: <span className="font-mono font-semibold">I</span> · Cliente: <span className="font-mono font-semibold">G</span>
+            </>
+          ) : (
+            <>
+              Colunas Cliente — Nota: <span className="font-mono font-semibold">{cols.nota}</span> · Valor Contábil: <span className="font-mono font-semibold">{cols.valor}</span>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className={`mt-6 grid gap-4 ${isSaidaNFSe ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+        {!isSaidaNFSe && (
+          <FileInput
+            label="Relatório Cliente (Excel)"
+            accept=".xlsx,.xls"
+            file={jettax}
+            onChange={setJettax}
+            icon={<FileSpreadsheet className="h-5 w-5" />}
+          />
+        )}
         <FileInput
-          label="Relatório Cliente (Excel)"
+          label="Relatório Portal Nacional (Excel)"
           accept=".xlsx,.xls"
-          file={jettax}
-          onChange={setJettax}
+          file={portal}
+          onChange={setPortal}
           icon={<FileSpreadsheet className="h-5 w-5" />}
         />
-        <label className="block rounded-lg border border-dashed bg-muted/30 p-5 opacity-60 cursor-not-allowed">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 text-muted-foreground"><FileSpreadsheet className="h-5 w-5" /></div>
-            <div className="flex-1">
-              <div className="font-medium text-sm">Relatório Portal Nacional (Excel)</div>
-              <div className="mt-1 text-xs text-muted-foreground">Indisponível no momento</div>
-            </div>
-          </div>
-        </label>
         <FileInput
           label="Relatório Domínio (Excel ou PDF)"
           accept=".xlsx,.xls,.pdf"

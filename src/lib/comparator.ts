@@ -128,6 +128,51 @@ export async function parseExcel(
   return { records, clientName };
 }
 
+// Portal Nacional (NFS-e) — Nota: A, Valor: I, Cliente/Tomador: G,
+// Prestador: E (nome do cliente do escritório), Situação: J
+export async function parsePortalExcel(
+  file: File,
+): Promise<{ records: ParsedRecord[]; clientName?: string }> {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const notaIdx = colLetterToIndex("A");
+  const valorIdx = colLetterToIndex("I");
+  const clienteIdx = colLetterToIndex("G");
+  const prestadorIdx = colLetterToIndex("E");
+  const situacaoIdx = colLetterToIndex("J");
+  const records: ParsedRecord[] = [];
+  let clientName: string | undefined;
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      raw: true,
+      defval: null,
+    });
+    for (const row of rows) {
+      if (!row) continue;
+      if (row[situacaoIdx] != null) {
+        const st = String(row[situacaoIdx])
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        if (st.includes("cancelad")) continue;
+      }
+      const nota = normalizeNota(row[notaIdx]);
+      if (!nota) continue;
+      const valor = parseNumber(row[valorIdx]);
+      const fornecedor =
+        row[clienteIdx] != null ? String(row[clienteIdx]).trim() || undefined : undefined;
+      if (!clientName && row[prestadorIdx] != null) {
+        const v = String(row[prestadorIdx]).trim();
+        if (v) clientName = v;
+      }
+      records.push({ nota, valor, fornecedor });
+    }
+  }
+  return { records, clientName };
+}
+
 export type DominioRecord = ParsedRecord & { especie?: string };
 
 // Normaliza o código da espécie: "36", " 36 ", "036", "36,0", "36 - NF-e" -> "36"
