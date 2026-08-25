@@ -58,31 +58,7 @@ function AuthPage() {
   }, [navigate]);
 
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = schema.safeParse({ email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { token_hash } = await signInWithExternalBase({
-        data: { email: parsed.data.email, password: parsed.data.password },
-      });
-      const { error } = await supabase.auth.verifyOtp({ type: "email", token_hash });
-      if (error) throw error;
-      toast.success("Bem-vindo!");
-      navigate({ to: "/" });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro inesperado";
-      toast.error(
-        msg.includes("Invalid login credentials") ? "E-mail ou senha inválidos" : msg,
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+
 
 
   if (checking) {
