@@ -501,8 +501,9 @@ function CompareStep({
   const [result, setResult] = useState<CompareResult | null>(null);
 
   const cols = getColumns(movement, docType);
+  const isSaidaNFSe = movement === "saida" && docType === "NFSe";
 
-  const canCompare = (jettax || portal) && dominio;
+  const canCompare = (isSaidaNFSe ? portal : jettax || portal) && dominio;
 
   const run = async () => {
     setError(null);
@@ -513,7 +514,7 @@ function CompareStep({
       const isExcelDom = /\.xlsx?$/i.test(dominio.name);
       const [jParsed, pParsed, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
-        portal ? parseExcel(portal, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
+        portal ? parsePortalExcel(portal) : Promise.resolve({ records: [], clientName: undefined }),
         isExcelDom
           ? parseDominioExcel(dominio, movement, docType)
           : parseDominioPdf(dominio, movement, docType),
