@@ -110,50 +110,18 @@ function AuthPage() {
   }
 
   return (
-
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold">
-            NF
-          </div>
-          <h1 className="text-xl font-semibold">Comparador de Notas Fiscais</h1>
-          <p className="text-sm text-muted-foreground mt-1">Entre na sua conta</p>
+      <Card className="w-full max-w-md p-8 text-center">
+        <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold">
+          NF
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="animate-spin" />}
-            Entrar
-          </Button>
-        </form>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          O acesso é gerenciado pelo administrador.
+        <h1 className="text-xl font-semibold">Comparador de Notas Fiscais</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          O acesso a este app é feito pelo sistema principal. Nenhuma sessão válida foi
+          encontrada — retorne ao sistema e acesse novamente pelo link do app.
         </p>
       </Card>
     </div>
   );
 }
+
