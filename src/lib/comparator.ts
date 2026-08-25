@@ -269,24 +269,26 @@ export async function parseDominioExcel(
     const iForn = useHeader ? hForn : fornIdx;
     const iCfop = useHeader ? hCfop : cfopIdx;
 
-    for (const row of rows) {
+    for (let r = useHeader ? headerRow + 1 : 0; r < rows.length; r++) {
+      const row = rows[r];
       if (!row) continue;
       const especie =
-        espIdx >= 0 && row[espIdx] != null ? normalizeEspecie(row[espIdx]) : "";
-      if (allowed.size > 0 && !allowed.has(especie)) continue;
-      const nota = normalizeNota(row[notaIdx]);
+        iEsp >= 0 && row[iEsp] != null ? normalizeEspecie(row[iEsp]) : "";
+      if (allowed.size > 0 && iEsp >= 0 && !allowed.has(especie)) continue;
+      const nota = normalizeNota(row[iNota]);
       if (!nota) continue;
-      const valor = parseNumber(row[valorIdx]);
+      const valor = parseNumber(row[iValor]);
       const fornecedor =
-        fornIdx >= 0 && row[fornIdx] != null
-          ? String(row[fornIdx]).trim() || undefined
+        iForn >= 0 && row[iForn] != null
+          ? String(row[iForn]).trim() || undefined
           : undefined;
       const cfop =
-        cfopIdx >= 0 && row[cfopIdx] != null
-          ? String(row[cfopIdx]).replace(/\D+/g, "") || undefined
+        iCfop >= 0 && row[iCfop] != null
+          ? String(row[iCfop]).replace(/\D+/g, "") || undefined
           : undefined;
       records.push({ nota, valor, fornecedor, especie, cfop });
     }
+
   }
   return records;
 }
