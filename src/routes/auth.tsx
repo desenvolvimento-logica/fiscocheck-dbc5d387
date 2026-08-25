@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithExternalBase } from "@/lib/external-auth.functions";
+import { signInWithExternalBase, signInWithExternalToken } from "@/lib/external-auth.functions";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,6 +35,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const signIn = useServerFn(signInWithExternalBase);
+  const signInByExternalToken = useServerFn(signInWithExternalToken);
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,15 +55,38 @@ function AuthPage() {
       const refresh_token =
         hashParams.get("refresh_token") ?? queryParams.get("refresh_token");
 
-      if (access_token && refresh_token) {
-        const { error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token,
-        });
+      if (access_token) {
+        if (refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          if (!error) {
+            window.history.replaceState(null, "", window.location.pathname);
+            if (!cancelled) {
+              await router.invalidate();
+              navigate({ to: "/" });
+            }
+            return;
+          }
+        }
+
+        const result = await signInByExternalToken({ data: { access_token } });
         window.history.replaceState(null, "", window.location.pathname);
-        if (!error) {
-          if (!cancelled) navigate({ to: "/" });
-          return;
+        if (result.ok) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: result.token_hash,
+            type: "magiclink",
+          });
+          if (!error) {
+            if (!cancelled) {
+              await router.invalidate();
+              navigate({ to: "/" });
+            }
+            return;
+          }
+        } else if (!cancelled) {
+          toast.error(result.message);
         }
       }
 
@@ -80,18 +104,29 @@ function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, router, signInByExternalToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const { token_hash } = await signIn({ data: { email, password } });
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: "magiclink",
-      });
-      if (error) throw error;
+      const result = await signIn({ data: { email, password } });
+      if (result.ok) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: result.token_hash,
+          type: "magiclink",
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (error) {
+          toast.error(result.message);
+          return;
+        }
+      }
       toast.success("Login realizado com sucesso");
       await router.invalidate();
       navigate({ to: "/" });
