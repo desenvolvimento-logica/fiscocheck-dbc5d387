@@ -2,27 +2,27 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { signInWithExternalBase, signInWithExternalToken } from "@/lib/external-auth.functions";
+import { signInWithExternalToken } from "@/lib/external-auth.functions";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
+
+const HUB_URL = "https://hub-ivory-eta.vercel.app";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Login — Comparador de Notas Fiscais" },
+      { title: "Acesso — Comparador de Notas Fiscais" },
       {
         name: "description",
-        content: "Acesse o comparador fiscal com seu e-mail e senha.",
+        content: "Acesso ao comparador fiscal via token de autenticação do Luz.IA.",
       },
-      { property: "og:title", content: "Login — Comparador de Notas Fiscais" },
+      { property: "og:title", content: "Acesso — Comparador de Notas Fiscais" },
       {
         property: "og:description",
-        content: "Acesse o comparador fiscal com seu e-mail e senha.",
+        content: "Acesso ao comparador fiscal via token de autenticação do Luz.IA.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -34,17 +34,22 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const signIn = useServerFn(signInWithExternalBase);
   const signInByExternalToken = useServerFn(signInWithExternalToken);
   const [checking, setChecking] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+
+  // Sessão aplicada pelo hub (postMessage) enquanto a tela está aberta
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED")) {
+        router.invalidate().then(() => navigate({ to: "/" }));
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, [navigate, router]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // 1) Token vindo na URL (hash ou query) — login automático
       const hash = window.location.hash.startsWith("#")
         ? window.location.hash.substring(1)
         : "";
@@ -90,7 +95,6 @@ function AuthPage() {
         }
       }
 
-      // 2) Sessão já existente
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (data.session) {
@@ -98,50 +102,22 @@ function AuthPage() {
         return;
       }
 
-      // 3) Sem token: exibe o formulário
-      setChecking(false);
+      // Sem token: aguarda alguns instantes a sessão enviada pelo hub
+      setTimeout(() => {
+        if (!cancelled) setChecking(false);
+      }, 2500);
     })();
     return () => {
       cancelled = true;
     };
   }, [navigate, router, signInByExternalToken]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const result = await signIn({ data: { email, password } });
-      if (result.ok) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: result.token_hash,
-          type: "magiclink",
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
-        if (error) {
-          toast.error(result.message);
-          return;
-        }
-      }
-      toast.success("Login realizado com sucesso");
-      await router.invalidate();
-      navigate({ to: "/" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível entrar");
-    } finally {
-      setLoading(false);
-    }
-  }
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <Loader2 className="animate-spin" />
-          Verificando acesso...
+          Validando token de acesso...
         </div>
       </div>
     );
@@ -149,44 +125,20 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mx-auto mb-3 h-10 w-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold">
-          NF
+      <Card className="w-full max-w-md p-8 text-center">
+        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+          <ShieldAlert className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h1 className="text-center text-xl font-semibold">Comparador de Notas Fiscais</h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          Entre com seu e-mail e senha para acessar o comparador.
+        <h1 className="text-xl font-semibold">Acesso não autorizado</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          O acesso a este aplicativo é feito exclusivamente pelo token de
+          autenticação do Luz.IA. Abra o comparador a partir do portal Luz.IA
+          para continuar.
         </p>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="animate-spin" />}
-            Entrar
-          </Button>
-        </form>
+        <Button asChild className="mt-6 w-full">
+          <a href={HUB_URL}>Ir para o Luz.IA</a>
+        </Button>
       </Card>
     </div>
   );
 }
-
