@@ -41,11 +41,11 @@ function AuthPage() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED")) {
-        router.invalidate().then(() => navigate({ to: "/" }));
+        window.location.href = "/";
       }
     });
     return () => data.subscription.unsubscribe();
-  }, [navigate, router]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
