@@ -28,7 +28,7 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AuthPage;
+  component: AuthPage,
 });
 
 function AuthPage() {
