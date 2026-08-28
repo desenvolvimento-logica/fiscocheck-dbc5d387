@@ -30,6 +30,7 @@ import { ArrowLeft, Download, History, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/team-history")({
+  ssr: false,
   head: () => ({
     meta: [{ title: "Histórico da Equipe — Comparador de Notas" }],
   }),

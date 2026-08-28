@@ -35,6 +35,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  ssr: false,
   head: () => ({
     meta: [{ title: "Dashboard da Equipe — Comparador de Notas" }],
   }),
