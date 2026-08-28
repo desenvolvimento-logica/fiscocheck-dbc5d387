@@ -8,7 +8,9 @@ declare global {
   }
 }
 
-if (typeof window !== "undefined" && !window.__luziaSessionListener) {
+export function initializeHubSessionListener() {
+  if (typeof window === "undefined" || window.__luziaSessionListener) return;
+
   window.__luziaSessionListener = true;
 
   window.addEventListener("message", (event: MessageEvent) => {
@@ -34,5 +36,7 @@ if (typeof window !== "undefined" && !window.__luziaSessionListener) {
     // ignora
   }
 }
+
+initializeHubSessionListener();
 
 export {};
