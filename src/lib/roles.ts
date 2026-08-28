@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/app-client";
 
 export type AppRole = "admin" | "user" | "lider" | "coordenador";
 
