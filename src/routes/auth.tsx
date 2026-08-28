@@ -12,10 +12,6 @@ import { Loader2, ShieldAlert } from "lucide-react";
 const HUB_URL = "https://hub-ivory-eta.vercel.app";
 
 export const Route = createFileRoute("/auth")({
-  // O resultado desta tela depende 100% de estado do browser (sessão em
-  // localStorage / postMessage do hub). Renderizar no servidor gera HTML que o
-  // cliente substitui logo após hidratar — origem do mismatch (React #418).
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Acesso — Comparador de Notas Fiscais" },

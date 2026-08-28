@@ -45,7 +45,6 @@ import { toast } from "sonner";
 import { ArrowLeft, Trash2, KeyRound, Upload, UserPlus, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  ssr: false,
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
