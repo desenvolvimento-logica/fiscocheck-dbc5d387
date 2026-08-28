@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/app-client";
 
 const HUB_ORIGIN = "https://hub-ivory-eta.vercel.app";
 

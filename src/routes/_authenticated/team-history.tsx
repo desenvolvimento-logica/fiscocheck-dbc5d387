@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, History, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/app-client";
 
 export const Route = createFileRoute("/_authenticated/team-history")({
   head: () => ({

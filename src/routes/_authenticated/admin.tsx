@@ -11,7 +11,7 @@ import {
   importUsersCsv,
   DEFAULT_FIRST_ACCESS_PASSWORD,
 } from "@/lib/admin.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/app-client";
 import { strongPasswordSchema, passwordRulesText } from "@/lib/password";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
