@@ -2,12 +2,17 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/app-client";
-import { signInWithExternalToken } from "@/lib/external-auth.functions";
+import {
+  signInWithExternalBase,
+  signInWithExternalToken,
+} from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const HUB_URL = "https://hub-ivory-eta.vercel.app";
 
