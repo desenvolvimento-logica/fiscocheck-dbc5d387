@@ -11,7 +11,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-const PATCH_VERSION = "2026-06-19";
+const PATCH_VERSION = "2026-09-15";
 const STORAGE_KEY = "patch-notes-seen";
 
 type Note = {
@@ -20,6 +20,20 @@ type Note = {
 };
 
 const NOTES: Note[] = [
+  {
+    title: "Notas canceladas no Portal Nacional são desconsideradas",
+    items: [
+      "Quando uma nota aparecer no relatório do Portal Nacional com **Situação = Cancelada** (coluna `J`), ela é retirada da comparação.",
+      "A exclusão vale para os dois lados: **Domínio** e **relatório do cliente**, evitando divergências falsas.",
+      "Regra aplicada tanto em **Saídas · NFSe** quanto em **Entradas · NFSe** — basta anexar o relatório do Portal Nacional junto com os demais.",
+    ],
+  },
+  {
+    title: "Leitura do relatório do cliente",
+    items: [
+      "O arquivo do cliente passa a ser lido somente pela **primeira aba** (*Relatório Detalhado por Nota*), para todos os tipos de documento.",
+    ],
+  },
   {
     title: "Redefinição de senha pelo administrador",
     items: [
@@ -60,6 +74,27 @@ const NOTES: Note[] = [
     ],
   },
 ];
+
+// Renderiza marcação simples: **negrito**, *itálico* e `código`
+function renderMarkdown(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g).filter(Boolean);
+  return parts.map((p, i) => {
+    if (p.startsWith("**") && p.endsWith("**"))
+      return (
+        <strong key={i} className="font-semibold text-foreground">
+          {p.slice(2, -2)}
+        </strong>
+      );
+    if (p.startsWith("`") && p.endsWith("`"))
+      return (
+        <code key={i} className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+          {p.slice(1, -1)}
+        </code>
+      );
+    if (p.startsWith("*") && p.endsWith("*")) return <em key={i}>{p.slice(1, -1)}</em>;
+    return <span key={i}>{p}</span>;
+  });
+}
 
 export function PatchNotesButton() {
   const [open, setOpen] = useState(false);
@@ -105,7 +140,7 @@ export function PatchNotesButton() {
         </DialogHeader>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Atualização</Badge>
-          <span className="text-sm text-muted-foreground">19 de junho de 2026</span>
+          <span className="text-sm text-muted-foreground">15 de setembro de 2026</span>
         </div>
         <ScrollArea className="max-h-[60vh] pr-4">
           <div className="space-y-5 pt-2">
@@ -114,7 +149,7 @@ export function PatchNotesButton() {
                 <h3 className="font-semibold text-base mb-2">{n.title}</h3>
                 <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
                   {n.items.map((it, i) => (
-                    <li key={i}>{it}</li>
+                    <li key={i}>{renderMarkdown(it)}</li>
                   ))}
                 </ul>
               </div>
