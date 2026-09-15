@@ -134,6 +134,9 @@ function TeamHistoryPage() {
     return comparisons.filter((c) => {
       if (authorFilter !== "all" && c.author_role !== authorFilter) return false;
       if (docFilter !== "all" && c.doc_type !== docFilter) return false;
+      const dia = new Date(c.created_at).toLocaleDateString("sv-SE");
+      if (dateFrom && dia < dateFrom) return false;
+      if (dateTo && dia > dateTo) return false;
       if (!q) return true;
       const p = profileById.get(c.user_id);
       return (
