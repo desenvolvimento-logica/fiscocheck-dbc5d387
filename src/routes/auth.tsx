@@ -41,8 +41,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const signInByExternalToken = useServerFn(signInWithExternalToken);
-  const signInByPassword = useServerFn(signInWithExternalBase);
-  const signInNoPassword = useServerFn(signInWithoutPasswordFn);
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
