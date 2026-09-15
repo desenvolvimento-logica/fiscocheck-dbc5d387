@@ -88,6 +88,8 @@ function TeamHistoryPage() {
   const [search, setSearch] = useState("");
   const [authorFilter, setAuthorFilter] = useState<string>("all");
   const [docFilter, setDocFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [selected, setSelected] = useState<Comparison | null>(null);
 
   const { data: comparisons = [], isLoading } = useQuery({
@@ -132,6 +134,9 @@ function TeamHistoryPage() {
     return comparisons.filter((c) => {
       if (authorFilter !== "all" && c.author_role !== authorFilter) return false;
       if (docFilter !== "all" && c.doc_type !== docFilter) return false;
+      const dia = new Date(c.created_at).toLocaleDateString("sv-SE");
+      if (dateFrom && dia < dateFrom) return false;
+      if (dateTo && dia > dateTo) return false;
       if (!q) return true;
       const p = profileById.get(c.user_id);
       return (
@@ -140,7 +145,7 @@ function TeamHistoryPage() {
         (p?.email ?? "").toLowerCase().includes(q)
       );
     });
-  }, [comparisons, search, authorFilter, docFilter, profileById]);
+  }, [comparisons, search, authorFilter, docFilter, dateFrom, dateTo, profileById]);
 
   const baixar = async (entry: Comparison) => {
     const XLSX = await import("xlsx");
@@ -181,7 +186,7 @@ function TeamHistoryPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-8">
         <Card className="p-4 mb-4">
-          <div className="grid gap-3 sm:grid-cols-[1fr_180px_180px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_170px_170px_160px_160px]">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -215,7 +220,29 @@ function TeamHistoryPage() {
                 <SelectItem value="CTE">CTE</SelectItem>
               </SelectContent>
             </Select>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Data inicial</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Data final</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
           </div>
+          {(dateFrom || dateTo) && (
+            <div className="mt-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              >
+                Limpar datas
+              </Button>
+            </div>
+          )}
         </Card>
 
         <Card>
