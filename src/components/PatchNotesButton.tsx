@@ -21,6 +21,20 @@ type Note = {
 
 const NOTES: Note[] = [
   {
+    title: "Notas canceladas no Portal Nacional são desconsideradas",
+    items: [
+      "Quando uma nota aparecer no relatório do Portal Nacional com **Situação = Cancelada** (coluna `J`), ela é retirada da comparação.",
+      "A exclusão vale para os dois lados: **Domínio** e **relatório do cliente**, evitando divergências falsas.",
+      "Regra aplicada tanto em **Saídas · NFSe** quanto em **Entradas · NFSe** — basta anexar o relatório do Portal Nacional junto com os demais.",
+    ],
+  },
+  {
+    title: "Leitura do relatório do cliente",
+    items: [
+      "O arquivo do cliente passa a ser lido somente pela **primeira aba** (*Relatório Detalhado por Nota*), para todos os tipos de documento.",
+    ],
+  },
+  {
     title: "Redefinição de senha pelo administrador",
     items: [
       "Agora o administrador pode redefinir a senha de qualquer usuário diretamente pela tela de administração.",
