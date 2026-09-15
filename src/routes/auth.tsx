@@ -40,7 +40,37 @@ function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const signInByExternalToken = useServerFn(signInWithExternalToken);
+  const signInByPassword = useServerFn(signInWithExternalBase);
   const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await signInByPassword({ data: { email, password } });
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: result.token_hash,
+        type: "magiclink",
+      });
+      if (error) {
+        toast.error("Não foi possível iniciar a sessão");
+        return;
+      }
+      window.location.href = "/";
+    } catch {
+      toast.error("Não foi possível validar o acesso");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   // Sessão aplicada pelo hub (postMessage) enquanto a tela está aberta
   useEffect(() => {
