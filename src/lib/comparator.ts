@@ -473,7 +473,14 @@ export function compare(
   jettax: ParsedRecord[],
   portal: ParsedRecord[],
   dominio: DominioRecord[],
+  canceladas: string[] = [],
 ): CompareResult {
+  const canceladasSet = new Set(canceladas.filter(Boolean));
+  if (canceladasSet.size > 0) {
+    jettax = jettax.filter((r) => !canceladasSet.has(r.nota));
+    portal = portal.filter((r) => !canceladasSet.has(r.nota));
+    dominio = dominio.filter((r) => !canceladasSet.has(r.nota));
+  }
   const bothProvided = jettax.length > 0 && portal.length > 0;
   // Chave de duplicidade do cliente: nota + fornecedor
   // (espécie é implícita pelo tipo de documento selecionado)
