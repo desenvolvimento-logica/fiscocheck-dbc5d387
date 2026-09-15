@@ -88,6 +88,8 @@ function TeamHistoryPage() {
   const [search, setSearch] = useState("");
   const [authorFilter, setAuthorFilter] = useState<string>("all");
   const [docFilter, setDocFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [selected, setSelected] = useState<Comparison | null>(null);
 
   const { data: comparisons = [], isLoading } = useQuery({
