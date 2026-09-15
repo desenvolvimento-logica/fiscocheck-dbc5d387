@@ -282,8 +282,8 @@ function TeamHistoryPage() {
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
-          {(dateFrom || dateTo) && (
-            <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {(dateFrom || dateTo) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -294,8 +294,18 @@ function TeamHistoryPage() {
               >
                 Limpar datas
               </Button>
-            </div>
-          )}
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              onClick={exportarHistorico}
+              disabled={filtered.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Exportar Excel ({filtered.length})
+            </Button>
+          </div>
         </Card>
 
         <Card>
