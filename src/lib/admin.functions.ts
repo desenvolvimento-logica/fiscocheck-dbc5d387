@@ -109,6 +109,16 @@ export const createOfficeUser = createServerFn({ method: "POST" })
     return { id };
   });
 
+// Compatibilidade com abas que ainda carregaram a versão anterior do painel.
+export const createUser = createServerFn({ method: "POST" })
+  .middleware([requireOfficeAuth])
+  .inputValidator((d: CreateUserInput) => d)
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.supabase, context.userId);
+    const id = await createOneUser(data);
+    return { id };
+  });
+
 export const deleteUser = createServerFn({ method: "POST" })
   .middleware([requireOfficeAuth])
   .inputValidator((d: { user_id: string }) => d)
