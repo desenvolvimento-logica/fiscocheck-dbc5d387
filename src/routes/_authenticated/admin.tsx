@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef } from "react";
 import {
   listUsers,
-  createUser,
+  createOfficeUser,
   deleteUser,
   updateUserRole,
   resetUserPassword,
@@ -110,7 +110,7 @@ function AdminPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const list = useServerFn(listUsers);
-  const create = useServerFn(createUser);
+  const create = useServerFn(createOfficeUser);
   const remove = useServerFn(deleteUser);
   const setRole = useServerFn(updateUserRole);
   const resetPw = useServerFn(resetUserPassword);
