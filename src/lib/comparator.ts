@@ -132,7 +132,7 @@ export async function parseExcel(
 // Prestador: E (nome do cliente do escritório), Situação: J
 export async function parsePortalExcel(
   file: File,
-): Promise<{ records: ParsedRecord[]; clientName?: string }> {
+): Promise<{ records: ParsedRecord[]; clientName?: string; canceladas: string[] }> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
   const notaIdx = colLetterToIndex("A");
@@ -141,6 +141,7 @@ export async function parsePortalExcel(
   const prestadorIdx = colLetterToIndex("E");
   const situacaoIdx = colLetterToIndex("J");
   const records: ParsedRecord[] = [];
+  const canceladas = new Set<string>();
   let clientName: string | undefined;
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
@@ -156,7 +157,11 @@ export async function parsePortalExcel(
           .toLowerCase()
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-        if (st.includes("cancelad")) continue;
+        if (st.includes("cancelad")) {
+          const n = normalizeNota(row[notaIdx]);
+          if (n) canceladas.add(n);
+          continue;
+        }
       }
       const nota = normalizeNota(row[notaIdx]);
       if (!nota) continue;
@@ -170,7 +175,7 @@ export async function parsePortalExcel(
       records.push({ nota, valor, fornecedor });
     }
   }
-  return { records, clientName };
+  return { records, clientName, canceladas: [...canceladas] };
 }
 
 export type DominioRecord = ParsedRecord & { especie?: string };
@@ -468,7 +473,14 @@ export function compare(
   jettax: ParsedRecord[],
   portal: ParsedRecord[],
   dominio: DominioRecord[],
+  canceladas: string[] = [],
 ): CompareResult {
+  const canceladasSet = new Set(canceladas.filter(Boolean));
+  if (canceladasSet.size > 0) {
+    jettax = jettax.filter((r) => !canceladasSet.has(r.nota));
+    portal = portal.filter((r) => !canceladasSet.has(r.nota));
+    dominio = dominio.filter((r) => !canceladasSet.has(r.nota));
+  }
   const bothProvided = jettax.length > 0 && portal.length > 0;
   // Chave de duplicidade do cliente: nota + fornecedor
   // (espécie é implícita pelo tipo de documento selecionado)
