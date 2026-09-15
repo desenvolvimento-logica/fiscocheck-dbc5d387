@@ -2,12 +2,17 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/app-client";
-import { signInWithExternalToken } from "@/lib/external-auth.functions";
+import {
+  signInWithExternalBase,
+  signInWithExternalToken,
+} from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const HUB_URL = "https://hub-ivory-eta.vercel.app";
 
@@ -35,7 +40,37 @@ function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const signInByExternalToken = useServerFn(signInWithExternalToken);
+  const signInByPassword = useServerFn(signInWithExternalBase);
   const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await signInByPassword({ data: { email, password } });
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: result.token_hash,
+        type: "magiclink",
+      });
+      if (error) {
+        toast.error("Não foi possível iniciar a sessão");
+        return;
+      }
+      window.location.href = "/";
+    } catch {
+      toast.error("Não foi possível validar o acesso");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   // Sessão aplicada pelo hub (postMessage) enquanto a tela está aberta
   useEffect(() => {
@@ -125,18 +160,40 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md p-8 text-center">
-        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-          <ShieldAlert className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h1 className="text-xl font-semibold">Acesso não autorizado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          O acesso a este aplicativo é feito exclusivamente pelo token de
-          autenticação do Luz.IA. Abra o comparador a partir do portal Luz.IA
-          para continuar.
+      <Card className="w-full max-w-md p-8">
+        <h1 className="text-xl font-semibold text-center">Entrar</h1>
+        <p className="mt-2 text-sm text-muted-foreground text-center">
+          Use seu e-mail e senha do Luz.IA para acessar o comparador.
         </p>
-        <Button asChild className="mt-6 w-full">
-          <a href={HUB_URL}>Ir para o Luz.IA</a>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left">
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? <Loader2 className="animate-spin" /> : "Entrar"}
+          </Button>
+        </form>
+        <Button asChild variant="outline" className="mt-4 w-full">
+          <a href={HUB_URL}>Entrar pelo Luz.IA</a>
         </Button>
       </Card>
     </div>
