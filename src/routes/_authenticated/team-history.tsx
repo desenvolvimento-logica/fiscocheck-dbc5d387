@@ -186,7 +186,7 @@ function TeamHistoryPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-8">
         <Card className="p-4 mb-4">
-          <div className="grid gap-3 sm:grid-cols-[1fr_180px_180px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_170px_170px_160px_160px]">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
