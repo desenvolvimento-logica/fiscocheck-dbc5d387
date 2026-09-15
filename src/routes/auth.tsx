@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/app-client";
 import {
   signInWithExternalBase,
   signInWithExternalToken,
+  signInWithoutPasswordFn,
 } from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
