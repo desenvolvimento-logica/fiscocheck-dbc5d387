@@ -141,6 +141,7 @@ export async function parsePortalExcel(
   const prestadorIdx = colLetterToIndex("E");
   const situacaoIdx = colLetterToIndex("J");
   const records: ParsedRecord[] = [];
+  const canceladas = new Set<string>();
   let clientName: string | undefined;
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
