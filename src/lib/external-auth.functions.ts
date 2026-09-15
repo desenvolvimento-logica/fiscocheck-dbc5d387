@@ -17,6 +17,17 @@ export const signInWithExternalBase = createServerFn({ method: "POST" })
     }
   });
 
+export const signInWithoutPasswordFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { email: string }) => d)
+  .handler(async ({ data }): Promise<SignInResult> => {
+    try {
+      const { signInWithoutPassword } = await import("./external-auth.server");
+      return await signInWithoutPassword(data.email);
+    } catch {
+      return { ok: false, message: "Não foi possível validar o acesso" };
+    }
+  });
+
 export const signInWithExternalToken = createServerFn({ method: "POST" })
   .inputValidator((d: TokenInput) => d)
   .handler(async ({ data }): Promise<SignInResult> => {

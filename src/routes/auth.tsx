@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/app-client";
 import {
   signInWithExternalBase,
   signInWithExternalToken,
+  signInWithoutPasswordFn,
 } from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
@@ -41,6 +42,7 @@ function AuthPage() {
   const router = useRouter();
   const signInByExternalToken = useServerFn(signInWithExternalToken);
   const signInByPassword = useServerFn(signInWithExternalBase);
+  const signInNoPassword = useServerFn(signInWithoutPasswordFn);
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +53,9 @@ function AuthPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const result = await signInByPassword({ data: { email, password } });
+      const result = password
+        ? await signInByPassword({ data: { email, password } })
+        : await signInNoPassword({ data: { email } });
       if (!result.ok) {
         toast.error(result.message);
         return;
@@ -183,7 +187,6 @@ function AuthPage() {
               id="password"
               type="password"
               autoComplete="current-password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

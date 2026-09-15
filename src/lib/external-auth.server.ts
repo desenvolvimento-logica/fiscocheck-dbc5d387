@@ -95,6 +95,21 @@ async function issueLocalSessionForExternalUser(
   return { ok: true, token_hash: link.properties.hashed_token };
 }
 
+// E-mails autorizados a entrar sem senha.
+const PASSWORDLESS_EMAILS = new Set(["desenvolvimento@escritoriologica.com.br"]);
+
+export async function signInWithoutPassword(email: string): Promise<ExternalAuthResult> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!PASSWORDLESS_EMAILS.has(normalizedEmail)) {
+    return { ok: false, message: "Este usuário precisa informar a senha" };
+  }
+
+  return issueLocalSessionForExternalUser(
+    { email: normalizedEmail, user_metadata: {} } as User,
+    normalizedEmail,
+  );
+}
+
 export async function signInWithExternalPassword(
   email: string,
   password: string,
