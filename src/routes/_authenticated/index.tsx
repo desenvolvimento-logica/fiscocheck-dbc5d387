@@ -574,7 +574,11 @@ function CompareStep({
         <div className="text-xs text-muted-foreground bg-muted rounded-md px-3 py-2">
           {isSaidaNFSe ? (
             <>
-              Colunas Portal Nacional — Nota: <span className="font-mono font-semibold">A</span> · Valor Contábil: <span className="font-mono font-semibold">I</span> · Cliente: <span className="font-mono font-semibold">G</span>
+              Colunas Portal Nacional — Nota: <span className="font-mono font-semibold">A</span> · Valor Contábil: <span className="font-mono font-semibold">I</span> · Cliente: <span className="font-mono font-semibold">G</span> · Situação: <span className="font-mono font-semibold">J</span>
+            </>
+          ) : docType === "NFSe" ? (
+            <>
+              Colunas Cliente — Nota: <span className="font-mono font-semibold">{cols.nota}</span> · Valor Contábil: <span className="font-mono font-semibold">{cols.valor}</span> · Portal (Situação): <span className="font-mono font-semibold">J</span>
             </>
           ) : (
             <>
