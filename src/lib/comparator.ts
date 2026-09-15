@@ -175,7 +175,7 @@ export async function parsePortalExcel(
       records.push({ nota, valor, fornecedor });
     }
   }
-  return { records, clientName };
+  return { records, clientName, canceladas: [...canceladas] };
 }
 
 export type DominioRecord = ParsedRecord & { especie?: string };
