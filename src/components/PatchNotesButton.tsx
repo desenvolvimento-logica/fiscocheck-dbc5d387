@@ -128,7 +128,7 @@ export function PatchNotesButton() {
                 <h3 className="font-semibold text-base mb-2">{n.title}</h3>
                 <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
                   {n.items.map((it, i) => (
-                    <li key={i}>{it}</li>
+                    <li key={i}>{renderMarkdown(it)}</li>
                   ))}
                 </ul>
               </div>
