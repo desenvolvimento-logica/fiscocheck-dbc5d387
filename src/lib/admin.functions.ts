@@ -66,17 +66,43 @@ async function createOneUser(input: CreateUserInput) {
   const supabaseAdmin = officeAdminClient();
   const email = input.email.trim().toLowerCase();
   const password = input.password && input.password.length > 0 ? input.password : DEFAULT_FIRST_ACCESS_PASSWORD;
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      display_name: input.display_name,
-      must_change_password: true,
-    },
+  const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
   });
-  if (error) throw new Error(error.message);
-  const uid = data.user?.id;
+  if (listError) throw new Error(listError.message);
+
+  const existingUser = existingUsers.users.find(
+    (user) => user.email?.trim().toLowerCase() === email,
+  );
+
+  let uid: string | undefined;
+  if (existingUser) {
+    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+      password,
+      email_confirm: true,
+      user_metadata: {
+        ...existingUser.user_metadata,
+        display_name: input.display_name,
+        must_change_password: true,
+      },
+    });
+    if (error) throw new Error(error.message);
+    uid = data.user?.id;
+  } else {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        display_name: input.display_name,
+        must_change_password: true,
+      },
+    });
+    if (error) throw new Error(error.message);
+    uid = data.user?.id;
+  }
+
   if (!uid) throw new Error("A base não retornou o identificador do novo usuário");
 
   await supabaseAdmin
@@ -101,6 +127,16 @@ async function createOneUser(input: CreateUserInput) {
 // Nome dedicado para evitar que clientes antigos reutilizem o identificador
 // de função que ficou armazenado durante a troca da base de autenticação.
 export const createOfficeUser = createServerFn({ method: "POST" })
+  .middleware([requireOfficeAuth])
+  .inputValidator((d: CreateUserInput) => d)
+  .handler(async ({ data, context }) => {
+    await ensureAdmin(context.supabase, context.userId);
+    const id = await createOneUser(data);
+    return { id };
+  });
+
+// Compatibilidade com abas que ainda carregaram a versão anterior do painel.
+export const createUser = createServerFn({ method: "POST" })
   .middleware([requireOfficeAuth])
   .inputValidator((d: CreateUserInput) => d)
   .handler(async ({ data, context }) => {
