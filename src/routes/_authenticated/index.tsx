@@ -514,7 +514,9 @@ function CompareStep({
       const isExcelDom = /\.xlsx?$/i.test(dominio.name);
       const [jParsed, pParsed, dRecs] = await Promise.all([
         jettax ? parseExcel(jettax, movement, docType) : Promise.resolve({ records: [], clientName: undefined }),
-        portal ? parsePortalExcel(portal) : Promise.resolve({ records: [], clientName: undefined }),
+        portal
+          ? parsePortalExcel(portal)
+          : Promise.resolve({ records: [], clientName: undefined, canceladas: [] as string[] }),
         isExcelDom
           ? parseDominioExcel(dominio, movement, docType)
           : parseDominioPdf(dominio, movement, docType),
