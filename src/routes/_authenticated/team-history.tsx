@@ -147,6 +147,50 @@ function TeamHistoryPage() {
     });
   }, [comparisons, search, authorFilter, docFilter, dateFrom, dateTo, profileById]);
 
+  const exportarHistorico = async () => {
+    const XLSX = await import("xlsx");
+    const resumo = filtered.map((c) => {
+      const p = profileById.get(c.user_id);
+      return {
+        Data: fmtDate(c.created_at),
+        Usuário: p?.display_name || "",
+        "E-mail": p?.email || "",
+        Perfil: roleLabel[c.author_role] ?? c.author_role,
+        Cliente: c.cliente,
+        Movimento: c.movement,
+        Documento: c.doc_type,
+        Divergências: c.divergences_count,
+        Classificadas: c.classified_count,
+        "Notas com diferença": c.diff_count,
+        "Diferença (R$)": c.diff_total,
+      };
+    });
+    const detalhes = filtered.flatMap((c) => {
+      const p = profileById.get(c.user_id);
+      return c.items.map((it, i) => ({
+        Data: fmtDate(c.created_at),
+        Usuário: p?.display_name || "",
+        Cliente: c.cliente,
+        Movimento: c.movement,
+        Documento: c.doc_type,
+        Nota: it.nota,
+        Fornecedor: it.fornecedor || "",
+        "Valor Contábil": it.valor,
+        "Diferença no": it.origem,
+        Classificação: c.classifications?.[`${it.nota}-${it.origem}-${i}`] || "",
+      }));
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumo), "Resumo");
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(detalhes.length ? detalhes : [{ Aviso: "Sem notas com diferença" }]),
+      "Notas",
+    );
+    const hoje = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `historico_equipe_${hoje}.xlsx`);
+  };
+
   const baixar = async (entry: Comparison) => {
     const XLSX = await import("xlsx");
     const rows = entry.items.map((it, i) => {
@@ -238,8 +282,8 @@ function TeamHistoryPage() {
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
-          {(dateFrom || dateTo) && (
-            <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {(dateFrom || dateTo) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -250,8 +294,18 @@ function TeamHistoryPage() {
               >
                 Limpar datas
               </Button>
-            </div>
-          )}
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              onClick={exportarHistorico}
+              disabled={filtered.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Exportar Excel ({filtered.length})
+            </Button>
+          </div>
         </Card>
 
         <Card>
