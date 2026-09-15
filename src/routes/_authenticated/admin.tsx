@@ -122,8 +122,12 @@ function AdminPage() {
   });
 
   const createMut = useMutation({
-    mutationFn: (input: { email: string; password: string; display_name: string; role: "admin" | "user" | "lider" | "coordenador" }) =>
-      create({ data: input }),
+    mutationFn: async (input: { email: string; password: string; display_name: string; role: "admin" | "user" | "lider" | "coordenador" }) => {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente pelo Luz.IA.");
+      return create({ data: { ...input, accessToken } });
+    },
     onSuccess: () => {
       toast.success("Usuário criado");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
