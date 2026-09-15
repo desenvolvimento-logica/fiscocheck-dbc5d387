@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, History, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/app-client";
+import { getComparisonAuthors } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/_authenticated/team-history")({
   head: () => ({
@@ -114,12 +115,8 @@ function TeamHistoryPage() {
     queryKey: ["team-profiles", userIds],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, display_name, email")
-        .in("id", userIds);
-      if (error) throw error;
-      return (data ?? []) as Profile[];
+      const rows = await getComparisonAuthors({ data: { userIds } });
+      return (rows ?? []) as Profile[];
     },
   });
 
