@@ -53,7 +53,9 @@ function AuthPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const result = await signInByPassword({ data: { email, password } });
+      const result = password
+        ? await signInByPassword({ data: { email, password } })
+        : await signInNoPassword({ data: { email } });
       if (!result.ok) {
         toast.error(result.message);
         return;
