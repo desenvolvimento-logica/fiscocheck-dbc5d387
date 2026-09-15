@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireOfficeAuth } from "./office-auth-middleware";
 
 type AdminUser = {
   id: string;
@@ -22,10 +22,11 @@ async function ensureAdmin(supabase: any, userId: string) {
 }
 
 export const listUsers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .handler(async ({ context }): Promise<AdminUser[]> => {
     await ensureAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
@@ -61,7 +62,8 @@ type CreateUserInput = {
 };
 
 async function createOneUser(input: CreateUserInput) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
   const email = input.email.trim().toLowerCase();
   const password = input.password && input.password.length > 0 ? input.password : DEFAULT_FIRST_ACCESS_PASSWORD;
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -96,7 +98,7 @@ async function createOneUser(input: CreateUserInput) {
 }
 
 export const createUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .inputValidator((d: CreateUserInput) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
@@ -105,23 +107,25 @@ export const createUser = createServerFn({ method: "POST" })
   });
 
 export const deleteUser = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .inputValidator((d: { user_id: string }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
     if (data.user_id === context.userId) throw new Error("Não é possível excluir o próprio usuário");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 export const updateUserRole = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .inputValidator((d: { user_id: string; role: "admin" | "user" | "lider" | "coordenador" }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
     const { error } = await supabaseAdmin
       .from("user_roles")
@@ -149,11 +153,12 @@ function generateTempPassword(): string {
 }
 
 export const resetUserPassword = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .inputValidator((d: { user_id: string; password?: string; must_change_password?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await ensureAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
     const password = data.password && data.password.length > 0 ? data.password : generateTempPassword();
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
       password,
@@ -172,7 +177,7 @@ type ImportRow = CreateUserInput;
 type ImportResult = { email: string; ok: boolean; error?: string };
 
 export const importUsersCsv = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .inputValidator((d: { rows: ImportRow[] }) => d)
   .handler(async ({ data, context }): Promise<{ results: ImportResult[] }> => {
     await ensureAdmin(context.supabase, context.userId);
@@ -193,9 +198,10 @@ export const importUsersCsv = createServerFn({ method: "POST" })
   });
 
 export const markPasswordChanged = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireOfficeAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { officeAdminClient } = await import("./office-supabase.server");
+  const supabaseAdmin = officeAdminClient();
     await supabaseAdmin
       .from("profiles")
       .update({ must_change_password: false })
