@@ -220,7 +220,29 @@ function TeamHistoryPage() {
                 <SelectItem value="CTE">CTE</SelectItem>
               </SelectContent>
             </Select>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Data inicial</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Data final</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
           </div>
+          {(dateFrom || dateTo) && (
+            <div className="mt-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              >
+                Limpar datas
+              </Button>
+            </div>
+          )}
         </Card>
 
         <Card>
