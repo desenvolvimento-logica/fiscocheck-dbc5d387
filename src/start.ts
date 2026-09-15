@@ -1,7 +1,8 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+// Sessão do app vive na base do escritório; o anexador padrão aponta para a base antiga.
+import { attachOfficeAuth } from "@/lib/office-auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
