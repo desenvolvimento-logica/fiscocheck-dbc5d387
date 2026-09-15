@@ -157,7 +157,11 @@ export async function parsePortalExcel(
           .toLowerCase()
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-        if (st.includes("cancelad")) continue;
+        if (st.includes("cancelad")) {
+          const n = normalizeNota(row[notaIdx]);
+          if (n) canceladas.add(n);
+          continue;
+        }
       }
       const nota = normalizeNota(row[notaIdx]);
       if (!nota) continue;
