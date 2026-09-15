@@ -2,11 +2,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/app-client";
-import {
-  signInWithExternalBase,
-  signInWithExternalToken,
-  signInWithoutPasswordFn,
-} from "@/lib/external-auth.functions";
+import { signInWithExternalToken } from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,8 +37,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const signInByExternalToken = useServerFn(signInWithExternalToken);
-  const signInByPassword = useServerFn(signInWithExternalBase);
-  const signInNoPassword = useServerFn(signInWithoutPasswordFn);
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,19 +47,18 @@ function AuthPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const result = password
-        ? await signInByPassword({ data: { email, password } })
-        : await signInNoPassword({ data: { email } });
-      if (!result.ok) {
-        toast.error(result.message);
+      if (!password) {
+        toast.error("Informe a senha ou entre pelo Luz.IA");
         return;
       }
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash: result.token_hash,
-        type: "magiclink",
+
+      // Login direto na base do escritório (mesma base da sessão do Luz.IA)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
       if (error) {
-        toast.error("Não foi possível iniciar a sessão");
+        toast.error("E-mail ou senha inválidos");
         return;
       }
       window.location.href = "/";
@@ -187,6 +180,7 @@ function AuthPage() {
               id="password"
               type="password"
               autoComplete="current-password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
