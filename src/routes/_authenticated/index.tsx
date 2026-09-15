@@ -521,7 +521,7 @@ function CompareStep({
           ? parseDominioExcel(dominio, movement, docType)
           : parseDominioPdf(dominio, movement, docType),
       ]);
-      const res = compare(jParsed.records, pParsed.records, dRecs);
+      const res = compare(jParsed.records, pParsed.records, dRecs, pParsed.canceladas);
       setResult(res);
       const cliente = jParsed.clientName || pParsed.clientName || "Cliente";
       const id = crypto.randomUUID();
