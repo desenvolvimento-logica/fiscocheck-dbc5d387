@@ -53,19 +53,18 @@ function AuthPage() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const result = password
-        ? await signInByPassword({ data: { email, password } })
-        : await signInNoPassword({ data: { email } });
-      if (!result.ok) {
-        toast.error(result.message);
+      if (!password) {
+        toast.error("Informe a senha ou entre pelo Luz.IA");
         return;
       }
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash: result.token_hash,
-        type: "magiclink",
+
+      // Login direto na base do escritório (mesma base da sessão do Luz.IA)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
       if (error) {
-        toast.error("Não foi possível iniciar a sessão");
+        toast.error("E-mail ou senha inválidos");
         return;
       }
       window.location.href = "/";
