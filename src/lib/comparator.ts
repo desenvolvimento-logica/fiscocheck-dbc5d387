@@ -132,7 +132,7 @@ export async function parseExcel(
 // Prestador: E (nome do cliente do escritório), Situação: J
 export async function parsePortalExcel(
   file: File,
-): Promise<{ records: ParsedRecord[]; clientName?: string }> {
+): Promise<{ records: ParsedRecord[]; clientName?: string; canceladas: string[] }> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
   const notaIdx = colLetterToIndex("A");
