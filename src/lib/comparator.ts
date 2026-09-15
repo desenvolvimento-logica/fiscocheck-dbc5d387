@@ -93,8 +93,8 @@ export async function parseExcel(
   const cfopIdx = cols.cfop ? colLetterToIndex(cols.cfop) : -1;
   const statusIdx = cols.status ? colLetterToIndex(cols.status) : -1;
 
-  // Para NFE (Entrada e Saída), considerar apenas a primeira aba (Relatório Detalhado por Nota)
-  const sheetNames = doc === "NFE" ? wb.SheetNames.slice(0, 1) : wb.SheetNames;
+  // Relatório do Cliente: considerar apenas a primeira aba (Relatório Detalhado por Nota)
+  const sheetNames = wb.SheetNames.slice(0, 1);
   for (const sheetName of sheetNames) {
     const ws = wb.Sheets[sheetName];
     const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
