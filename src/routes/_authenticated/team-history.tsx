@@ -115,12 +115,8 @@ function TeamHistoryPage() {
     queryKey: ["team-profiles", userIds],
     enabled: userIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, display_name, email")
-        .in("id", userIds);
-      if (error) throw error;
-      return (data ?? []) as Profile[];
+      const rows = await getComparisonAuthors({ data: { userIds } });
+      return (rows ?? []) as Profile[];
     },
   });
 
