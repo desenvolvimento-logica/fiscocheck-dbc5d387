@@ -76,7 +76,8 @@ async function createOneUser(input: CreateUserInput) {
     },
   });
   if (error) throw new Error(error.message);
-  const uid = data.user!.id;
+  const uid = data.user?.id;
+  if (!uid) throw new Error("A base não retornou o identificador do novo usuário");
 
   await supabaseAdmin
     .from("profiles")
@@ -97,7 +98,9 @@ async function createOneUser(input: CreateUserInput) {
   return uid;
 }
 
-export const createUser = createServerFn({ method: "POST" })
+// Nome dedicado para evitar que clientes antigos reutilizem o identificador
+// de função que ficou armazenado durante a troca da base de autenticação.
+export const createOfficeUser = createServerFn({ method: "POST" })
   .middleware([requireOfficeAuth])
   .inputValidator((d: CreateUserInput) => d)
   .handler(async ({ data, context }) => {
