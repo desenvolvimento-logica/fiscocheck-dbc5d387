@@ -2,11 +2,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/app-client";
-import {
-  signInWithExternalBase,
-  signInWithExternalToken,
-  signInWithoutPasswordFn,
-} from "@/lib/external-auth.functions";
+import { signInWithExternalToken } from "@/lib/external-auth.functions";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
