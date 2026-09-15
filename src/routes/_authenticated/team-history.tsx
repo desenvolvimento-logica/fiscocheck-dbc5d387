@@ -145,7 +145,7 @@ function TeamHistoryPage() {
         (p?.email ?? "").toLowerCase().includes(q)
       );
     });
-  }, [comparisons, search, authorFilter, docFilter, profileById]);
+  }, [comparisons, search, authorFilter, docFilter, dateFrom, dateTo, profileById]);
 
   const baixar = async (entry: Comparison) => {
     const XLSX = await import("xlsx");
