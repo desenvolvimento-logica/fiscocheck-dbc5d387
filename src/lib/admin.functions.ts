@@ -61,6 +61,19 @@ type CreateUserInput = {
   role: "admin" | "user" | "lider" | "coordenador";
 };
 
+type CreateOfficeUserInput = CreateUserInput & { accessToken: string };
+
+async function authenticateOfficeAdmin(accessToken: string) {
+  if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente pelo Luz.IA.");
+  const { officeUserClient } = await import("./office-supabase.server");
+  const supabase = officeUserClient(accessToken);
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  if (error || !data.user) {
+    throw new Error("Sua sessão expirou. Entre novamente pelo Luz.IA.");
+  }
+  await ensureAdmin(supabase, data.user.id);
+}
+
 async function createOneUser(input: CreateUserInput) {
   const { officeAdminClient } = await import("./office-supabase.server");
   const supabaseAdmin = officeAdminClient();
@@ -127,10 +140,9 @@ async function createOneUser(input: CreateUserInput) {
 // Nome dedicado para evitar que clientes antigos reutilizem o identificador
 // de função que ficou armazenado durante a troca da base de autenticação.
 export const createOfficeUser = createServerFn({ method: "POST" })
-  .middleware([requireOfficeAuth])
-  .inputValidator((d: CreateUserInput) => d)
-  .handler(async ({ data, context }) => {
-    await ensureAdmin(context.supabase, context.userId);
+  .inputValidator((d: CreateOfficeUserInput) => d)
+  .handler(async ({ data }) => {
+    await authenticateOfficeAdmin(data.accessToken);
     const id = await createOneUser(data);
     return { id };
   });
