@@ -11,7 +11,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-const PATCH_VERSION = "2026-06-19";
+const PATCH_VERSION = "2026-09-15";
 const STORAGE_KEY = "patch-notes-seen";
 
 type Note = {
