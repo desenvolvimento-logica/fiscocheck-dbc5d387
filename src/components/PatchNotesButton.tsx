@@ -119,7 +119,7 @@ export function PatchNotesButton() {
         </DialogHeader>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Atualização</Badge>
-          <span className="text-sm text-muted-foreground">19 de junho de 2026</span>
+          <span className="text-sm text-muted-foreground">15 de setembro de 2026</span>
         </div>
         <ScrollArea className="max-h-[60vh] pr-4">
           <div className="space-y-5 pt-2">
