@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Download, History, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/app-client";
+import { getComparisonAuthors } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/_authenticated/team-history")({
   head: () => ({
