@@ -186,46 +186,55 @@ function TeamHistoryPage() {
 
       <main className="mx-auto max-w-7xl px-6 py-8">
         <Card className="p-4 mb-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_170px_170px_160px_160px]">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por cliente, nome ou e-mail"
-                className="pl-8"
-              />
-            </div>
-            <Select value={authorFilter} onValueChange={setAuthorFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Perfil do autor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os perfis</SelectItem>
-                <SelectItem value="user">Usuário</SelectItem>
-                <SelectItem value="lider">Líder</SelectItem>
-                <SelectItem value="coordenador">Coordenador</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={docFilter} onValueChange={setDocFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Documento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os documentos</SelectItem>
-                <SelectItem value="NFE">NFE</SelectItem>
-                <SelectItem value="NFCe">NFCe</SelectItem>
-                <SelectItem value="NFSe">NFSe</SelectItem>
-                <SelectItem value="CTE">CTE</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_170px_170px_160px_160px]">
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Data inicial</label>
+              <label className="text-xs font-medium text-muted-foreground">Buscar</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cliente, nome ou e-mail"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Perfil do autor</label>
+              <Select value={authorFilter} onValueChange={setAuthorFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Perfil do autor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os perfis</SelectItem>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="lider">Líder</SelectItem>
+                  <SelectItem value="coordenador">Coordenador</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Documento</label>
+              <Select value={docFilter} onValueChange={setDocFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Documento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os documentos</SelectItem>
+                  <SelectItem value="NFE">NFE</SelectItem>
+                  <SelectItem value="NFCe">NFCe</SelectItem>
+                  <SelectItem value="NFSe">NFSe</SelectItem>
+                  <SelectItem value="CTE">CTE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Data inicial</label>
               <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Data final</label>
+              <label className="text-xs font-medium text-muted-foreground">Data final</label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
           </div>
