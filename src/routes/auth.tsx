@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-const HUB_URL = "https://hub-ivory-eta.vercel.app";
+const HUB_URL = "https://hub-logica.vercel.app";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
