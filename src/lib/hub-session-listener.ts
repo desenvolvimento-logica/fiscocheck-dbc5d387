@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/app-client";
 
-const HUB_ORIGIN = "https://hub-ivory-eta.vercel.app";
+const HUB_ORIGIN = "https://hub-logica.vercel.app";
 
 declare global {
   interface Window {
