@@ -15,7 +15,7 @@ const COLS: Record<
 > = {
   "entrada-NFE": { nota: "D", valor: "T", fornecedor: "I", cfop: "U", status: "A" },
   "entrada-CTE": { nota: "C", valor: "BI", fornecedor: "M", cfop: "BJ", status: "G" },
-  "entrada-NFSe": { nota: "A", valor: "L", fornecedor: "F", status: "K" },
+  "entrada-NFSe": { nota: "G", valor: "AA", fornecedor: "R" },
   "saida-NFE": { nota: "D", valor: "T", fornecedor: "N", cfop: "U" },
   "saida-NFCe": { nota: "D", valor: "T", cfop: "U" },
   "saida-NFSe": { nota: "A", valor: "L", fornecedor: "AA" },
@@ -64,7 +64,6 @@ export type ParsedRecord = {
 const CLIENT_NAME_CELL: Record<string, string> = {
   "entrada-NFE": "N2",
   "entrada-CTE": "J2",
-  "entrada-NFSe": "AA2",
 };
 
 export async function parseExcel(
@@ -206,6 +205,7 @@ const DOMINIO_COLS_DEFAULT: DominioColsCfg = {
 };
 const DOMINIO_COLS_BY_KEY: Record<string, DominioColsCfg> = {
   "saida-NFE": { nota: "E", fornecedor: "M", valor: "U", especie: "I" },
+  "entrada-NFSe": { nota: "F", fornecedor: "M", valor: "T" },
 };
 function getDominioCols(mov: Movement, doc: DocType): DominioColsCfg {
   return DOMINIO_COLS_BY_KEY[`${mov}-${doc}`] ?? DOMINIO_COLS_DEFAULT;
@@ -267,14 +267,16 @@ export async function parseDominioExcel(
         break;
       }
     }
-    const useHeader = headerRow >= 0;
+    const fixedLayout = !!DOMINIO_COLS_BY_KEY[`${mov}-${doc}`] && !cfg.especie;
+    const useHeader = headerRow >= 0 && !fixedLayout;
+    const startRow = headerRow >= 0 ? headerRow + 1 : 0;
     const iNota = useHeader ? hNota : notaIdx;
     const iValor = useHeader ? hValor : valorIdx;
     const iEsp = useHeader ? hEsp : espIdx;
     const iForn = useHeader ? hForn : fornIdx;
     const iCfop = useHeader ? hCfop : cfopIdx;
 
-    for (let r = useHeader ? headerRow + 1 : 0; r < rows.length; r++) {
+    for (let r = startRow; r < rows.length; r++) {
       const row = rows[r];
       if (!row) continue;
       const especie =
