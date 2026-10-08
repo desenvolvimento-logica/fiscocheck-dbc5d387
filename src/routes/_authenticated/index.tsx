@@ -591,7 +591,7 @@ function CompareStep({
       <div className={`mt-6 grid gap-4 ${isSaidaNFSe ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         {!isSaidaNFSe && (
           <FileInput
-            label="Relatório Cliente (Excel)"
+            label={movement === "entrada" && docType === "NFSe" ? "Relatório Unecont (Excel)" : "Relatório Cliente (Excel)"}
             accept=".xlsx,.xls"
             file={jettax}
             onChange={setJettax}
@@ -640,6 +640,7 @@ function CompareStep({
           result={result}
           historicoId={currentHistoricoId}
           movement={movement}
+          clientLabel={movement === "entrada" && docType === "NFSe" ? "Unecont" : "Jettax"}
           onClassificationsChange={() => setHistoricoVersion((v) => v + 1)}
         />
       )}
@@ -651,11 +652,13 @@ function Results({
   result,
   historicoId,
   movement,
+  clientLabel = "Jettax",
   onClassificationsChange,
 }: {
   result: CompareResult;
   historicoId: string | null;
   movement: Movement;
+  clientLabel?: string;
   onClassificationsChange: () => void;
 }) {
   const countOk = result.combinedClient.count === result.dominio.count;
@@ -664,13 +667,13 @@ function Results({
   return (
     <div className="mt-8 space-y-6">
       <div className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard title="Jettax" count={result.jettax.count} total={result.jettax.total} />
+        <SummaryCard title={clientLabel} count={result.jettax.count} total={result.jettax.total} />
         <SummaryCard title="Portal Nacional" count={result.portal.count} total={result.portal.total} />
         <SummaryCard title="Domínio" count={result.dominio.count} total={result.dominio.total} highlight />
       </div>
 
       <Card className="p-5">
-        <h3 className="font-semibold">Cliente combinado (Jettax + Portal, sem duplicidade)</h3>
+        <h3 className="font-semibold">Cliente combinado ({clientLabel} + Portal, sem duplicidade)</h3>
         <div className="mt-3 grid gap-4 sm:grid-cols-3 text-sm">
           <div>
             <div className="text-muted-foreground">Quantidade de notas</div>
