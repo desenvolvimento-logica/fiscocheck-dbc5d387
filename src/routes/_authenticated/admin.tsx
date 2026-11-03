@@ -45,6 +45,16 @@ import { toast } from "sonner";
 import { ArrowLeft, Trash2, KeyRound, Upload, UserPlus, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({
+    meta: [
+      { title: "Administração — FiscoCheck" },
+      { name: "description", content: "Gestão de usuários e perfis de acesso do FiscoCheck." },
+      { property: "og:title", content: "Administração — FiscoCheck" },
+      { property: "og:description", content: "Gestão de usuários e perfis de acesso do FiscoCheck." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   beforeLoad: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;

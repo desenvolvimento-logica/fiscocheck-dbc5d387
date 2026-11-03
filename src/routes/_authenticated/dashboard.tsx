@@ -36,7 +36,14 @@ import { supabase } from "@/integrations/supabase/app-client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
-    meta: [{ title: "Dashboard da Equipe — Comparador de Notas" }],
+    meta: [
+      { title: "Indicadores da Equipe — FiscoCheck" },
+      { name: "description", content: "Indicadores de comparações, divergências e classificações fiscais da equipe." },
+      { property: "og:title", content: "Indicadores da Equipe — FiscoCheck" },
+      { property: "og:description", content: "Indicadores de comparações, divergências e classificações fiscais da equipe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   component: DashboardPage,
 });
