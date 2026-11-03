@@ -32,7 +32,14 @@ import { getComparisonAuthors } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/_authenticated/team-history")({
   head: () => ({
-    meta: [{ title: "Histórico da Equipe — Comparador de Notas" }],
+    meta: [
+      { title: "Histórico da Equipe — FiscoCheck" },
+      { name: "description", content: "Histórico de comparações fiscais da equipe com filtros e exportação." },
+      { property: "og:title", content: "Histórico da Equipe — FiscoCheck" },
+      { property: "og:description", content: "Histórico de comparações fiscais da equipe com filtros e exportação." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   component: TeamHistoryPage,
 });

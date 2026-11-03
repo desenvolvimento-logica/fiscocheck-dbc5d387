@@ -12,6 +12,16 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/change-password")({
+  head: () => ({
+    meta: [
+      { title: "Alterar senha — FiscoCheck" },
+      { name: "description", content: "Atualização da senha de acesso ao FiscoCheck." },
+      { property: "og:title", content: "Alterar senha — FiscoCheck" },
+      { property: "og:description", content: "Atualização da senha de acesso ao FiscoCheck." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ChangePasswordPage,
 });
 

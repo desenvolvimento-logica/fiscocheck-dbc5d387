@@ -232,6 +232,10 @@ export const Route = createFileRoute("/_authenticated/")({
         content:
           "Compare relatórios de NFS, NFE e CTE entre Jettax, Portal Nacional e Domínio.",
       },
+      { property: "og:title", content: "FiscoCheck — Comparação fiscal" },
+      { property: "og:description", content: "Conferência de documentos fiscais entre relatórios do cliente, Unecont, Portal Nacional e Domínio." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
